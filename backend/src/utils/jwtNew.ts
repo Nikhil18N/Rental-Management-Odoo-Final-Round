@@ -119,16 +119,6 @@ class JwtUtils {
   }
 
   /**
-   * Extract token from Authorization header
-   */
-  extractTokenFromHeader(authHeader: string): string {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Invalid authorization header format');
-    }
-    return authHeader.substring(7); // Remove 'Bearer ' prefix
-  }
-
-  /**
    * Extract user ID from token without verification (for middleware)
    */
   extractUserIdFromToken(token: string): string | null {

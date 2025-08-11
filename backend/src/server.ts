@@ -1,9 +1,10 @@
+import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import connectDB from './config/database';
+import { initializeDatabase } from './config/database';
 import authRoutes from './routes/auth';
 
 // Load environment variables
@@ -12,8 +13,8 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Initialize PostgreSQL connection
+initializeDatabase();
 
 // Security middleware
 app.use(helmet({
