@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
 import { 
   Bell, 
   Search, 
@@ -14,12 +13,16 @@ import {
   UserCircle
 } from "lucide-react";
 
-export function Header() {
+interface HeaderProps {
+  onLogout?: () => void;
+  user?: any;
+}
+
+export function Header({ onLogout, user }: HeaderProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, logout, hasRole } = useAuth();
 
   const getRoleColor = (role: string) => {
-    switch (role) {
+    switch (role?.toLowerCase()) {
       case 'admin':
         return 'bg-red-100 text-red-800';
       case 'manager':
@@ -32,9 +35,13 @@ export function Header() {
   };
 
   const handleLogout = () => {
-    logout();
+    if (onLogout) {
+      onLogout();
+    }
     setIsUserMenuOpen(false);
   };
+
+  const currentUser = user || { role: 'customer', email: 'demo@example.com' };
 
   return (
     <header className="h-16 border-b bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">
@@ -102,13 +109,13 @@ export function Header() {
                         <User className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">{user?.name}</p>
-                        <p className="text-sm text-gray-500">{user?.email}</p>
+                        <p className="font-medium">{currentUser?.email}</p>
+                        <p className="text-sm text-gray-500">{currentUser?.email}</p>
                         <div className="flex items-center space-x-2 mt-1">
-                          <Badge className={getRoleColor(user?.role || '')}>
-                            {user?.role}
+                          <Badge className={getRoleColor(currentUser?.role || '')}>
+                            {currentUser?.role}
                           </Badge>
-                          {hasRole('admin') && (
+                          {currentUser?.role?.toLowerCase() === 'admin' && (
                             <Shield className="w-3 h-3 text-red-600" />
                           )}
                         </div>
