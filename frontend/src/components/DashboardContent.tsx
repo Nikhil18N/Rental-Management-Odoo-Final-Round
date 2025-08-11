@@ -265,4 +265,4 @@ export function DashboardContent() {
       </Card>
     </div>
   );
-}
+};

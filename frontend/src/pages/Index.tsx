@@ -1,12 +1,10 @@
 import { Layout } from "@/components/Layout";
 import { DashboardContent } from "@/components/DashboardContent";
 
-const Index = () => {
+export default function Index() {
   return (
     <Layout>
       <DashboardContent />
     </Layout>
   );
-};
-
-export default Index;
+}
