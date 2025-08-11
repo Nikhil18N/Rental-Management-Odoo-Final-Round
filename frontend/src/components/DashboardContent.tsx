@@ -87,16 +87,15 @@ export function DashboardContent() {
       {/* Content Grid */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Recent Orders */}
-        <Card className="lg:col-span-2 shadow-elegant hover:shadow-floating transition-elegant animate-slide-up overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-card opacity-30" />
-          <CardHeader className="relative flex flex-row items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm">
+        <Card className="lg:col-span-2 shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/60">
             <CardTitle className="text-xl font-bold text-foreground">Recent Orders</CardTitle>
             <Button variant="outline" size="sm" className="hover-lift transition-elegant">
               View All
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </CardHeader>
-          <CardContent className="relative p-6">
+          <CardContent className="p-6">
             <div className="space-y-4">
               {recentOrders.map((order, index) => (
                 <div 
@@ -123,12 +122,11 @@ export function DashboardContent() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-accent opacity-5" />
-          <CardHeader className="relative border-b border-border/60 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
+          <CardHeader className="border-b border-border/60">
             <CardTitle className="text-xl font-bold text-foreground">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="relative p-6 space-y-4">
+          <CardContent className="p-6 space-y-4">
             <Button className="w-full justify-start h-12 bg-gradient-primary hover:shadow-elegant transition-elegant hover-lift font-semibold">
               <Package className="w-5 h-5 mr-3" />
               Add New Product
@@ -151,12 +149,11 @@ export function DashboardContent() {
 
       {/* Additional Insights */}
       <div className="grid gap-8 md:grid-cols-2">
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5" />
-          <CardHeader className="relative border-b border-border/60 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
+          <CardHeader className="border-b border-border/60">
             <CardTitle className="text-xl font-bold text-foreground">Popular Products</CardTitle>
           </CardHeader>
-          <CardContent className="relative p-6">
+          <CardContent className="p-6">
             <div className="space-y-5">
               {[
                 { name: "Wedding Decoration Sets", rentals: 45, revenue: "₹67,500", trend: "+15%" },
@@ -179,12 +176,11 @@ export function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-accent opacity-5" />
-          <CardHeader className="relative border-b border-border/60 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
+          <CardHeader className="border-b border-border/60">
             <CardTitle className="text-xl font-bold text-foreground">System Alerts</CardTitle>
           </CardHeader>
-          <CardContent className="relative p-6">
+          <CardContent className="p-6">
             <div className="space-y-5">
               <div className="flex items-start space-x-4 p-4 bg-warning/10 rounded-xl border border-warning/30 hover:bg-warning/20 transition-elegant hover-lift animate-fade-in">
                 <div className="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center">

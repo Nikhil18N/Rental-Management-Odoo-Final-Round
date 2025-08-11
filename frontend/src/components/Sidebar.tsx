@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Link, useLocation } from "react-router-dom";
 import { 
   Package, 
   Calendar, 
@@ -18,19 +19,21 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: "Dashboard", icon: Home, current: true },
-  { name: "Products", icon: Package, current: false },
-  { name: "Bookings", icon: Calendar, current: false },
-  { name: "Customers", icon: Users, current: false },
-  { name: "Orders", icon: FileText, current: false },
-  { name: "Deliveries", icon: Truck, current: false },
-  { name: "Payments", icon: CreditCard, current: false },
-  { name: "Reports", icon: BarChart3, current: false },
-  { name: "Notifications", icon: Bell, current: false },
-  { name: "Settings", icon: Settings, current: false },
+  { name: "Dashboard", icon: Home, href: "/" },
+  { name: "Products", icon: Package, href: "/products" },
+  { name: "Bookings", icon: Calendar, href: "/bookings" },
+  { name: "Customers", icon: Users, href: "/customers" },
+  { name: "Orders", icon: FileText, href: "#" },
+  { name: "Deliveries", icon: Truck, href: "#" },
+  { name: "Payments", icon: CreditCard, href: "#" },
+  { name: "Reports", icon: BarChart3, href: "#" },
+  { name: "Notifications", icon: Bell, href: "#" },
+  { name: "Settings", icon: Settings, href: "#" },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
+  const location = useLocation();
+  
   return (
     <div className={cn("flex h-full w-64 flex-col bg-gradient-sidebar border-r border-border/60 backdrop-blur-sm", className)}>
       {/* Logo */}
@@ -47,21 +50,24 @@ export function Sidebar({ className }: SidebarProps) {
       <nav className="flex-1 space-y-1 px-3 py-6">
         {navigation.map((item, index) => {
           const Icon = item.icon;
+          const isActive = location.pathname === item.href;
+          
           return (
-            <Button
-              key={item.name}
-              variant={item.current ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start h-11 px-4 font-medium rounded-xl transition-elegant animate-fade-in",
-                item.current 
-                  ? "bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-floating" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover-lift"
-              )}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <Icon className="w-4 h-4 mr-3" />
-              {item.name}
-            </Button>
+            <Link key={item.name} to={item.href}>
+              <Button
+                variant={isActive ? "default" : "ghost"}
+                className={cn(
+                  "w-full justify-start h-11 px-4 font-medium rounded-xl transition-elegant animate-fade-in",
+                  isActive 
+                    ? "bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-floating" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover-lift"
+                )}
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <Icon className="w-4 h-4 mr-3" />
+                {item.name}
+              </Button>
+            </Link>
           );
         })}
       </nav>

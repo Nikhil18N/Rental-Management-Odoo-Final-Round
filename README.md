@@ -44,7 +44,7 @@ A comprehensive rental management application built with modern web technologies
    npm run dev:backend   # Backend only (port 3000)
    ```
 
-5. **Open your browser** and visit `http://localhost:5173`
+5. **Open your browser** and visit `http://localhost:5173` (frontend) and `http://localhost:3000` (backend)
 
 ## 💻 Tech Stack
 

@@ -1,23 +1,11 @@
-import { Sidebar } from "@/components/Sidebar";
-import { Header } from "@/components/Header";
+import { Layout } from "@/components/Layout";
 import { DashboardContent } from "@/components/DashboardContent";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <Sidebar />
-        
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-y-auto">
-            <DashboardContent />
-          </main>
-        </div>
-      </div>
-    </div>
+    <Layout>
+      <DashboardContent />
+    </Layout>
   );
 };
 
