@@ -1,28 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface User {
-  _id: string;
+  id: number;
   name: string;
   email: string;
   role: 'admin' | 'manager' | 'customer';
   phone?: string;
-  avatar?: string;
+  avatarUrl?: string;
   isActive: boolean;
   isEmailVerified: boolean;
   permissions: string[];
   lastLogin?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-  };
-  preferences?: {
-    notifications: boolean;
-    language: string;
-    timezone: string;
-  };
+  loginAttempts: number;
+  lockUntil?: string;
+  emailVerificationToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,6 +90,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
+      console.log('Starting login request for:', email);
+      console.log('API_BASE_URL:', API_BASE_URL);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -105,12 +101,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Login response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('Login error data:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
+      console.log('Login success data:', data);
       
       setUser(data.data.user);
       setToken(data.data.tokens.accessToken);
@@ -119,7 +119,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('auth_token', data.data.tokens.accessToken);
       localStorage.setItem('auth_user', JSON.stringify(data.data.user));
       
+      console.log('Login successful, user set:', data.data.user);
+      
     } catch (error) {
+      console.error('Login error in AuthContext:', error);
       throw error;
     } finally {
       setIsLoading(false);

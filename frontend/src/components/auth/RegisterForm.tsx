@@ -107,55 +107,62 @@ export default function RegisterForm() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Full Name</label>
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
+                    id="name"
                     type="text"
                     name="name"
                     placeholder="Enter your full name"
                     value={formData.name}
                     onChange={handleInputChange}
                     className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    autoComplete="name"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
+                    id="email"
                     type="email"
                     name="email"
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    autoComplete="email"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Phone (Optional)</label>
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone (Optional)</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
+                    id="phone"
                     type="tel"
                     name="phone"
                     placeholder="+91 98765 43210"
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    autoComplete="tel"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Account Type</label>
+                <label htmlFor="role" className="text-sm font-medium text-gray-700">Account Type</label>
                 <select
+                  id="role"
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
@@ -167,22 +174,26 @@ export default function RegisterForm() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Password</label>
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
+                    id="password"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={handleInputChange}
                     className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    autoComplete="new-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -202,22 +213,26 @@ export default function RegisterForm() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">Confirm Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
+                    id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    autoComplete="new-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    title={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

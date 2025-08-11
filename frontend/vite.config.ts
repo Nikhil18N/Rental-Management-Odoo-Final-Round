@@ -7,6 +7,10 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 5173,
+    cors: true,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    }
   },
   plugins: [
     react(),
@@ -14,6 +18,13 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
     },
   },
 }));

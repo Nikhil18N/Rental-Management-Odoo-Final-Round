@@ -151,6 +151,11 @@ export class AuthController {
       user.lastLogin = new Date();
       await this.userRepository.save(user);
 
+      // Fetch complete user data for response
+      const fullUser = await this.userRepository.findOne({
+        where: { id: user.id }
+      });
+
       // Generate tokens
       const { accessToken, refreshToken } = jwtUtils.generateTokenPair({
         userId: user.id.toString(),
@@ -160,7 +165,7 @@ export class AuthController {
       });
 
       // Remove sensitive data
-      const { passwordHash, loginAttempts, lockUntil, ...userResponse } = user;
+      const { passwordHash, loginAttempts, lockUntil, ...userResponse } = fullUser!;
 
       res.status(200).json({
         success: true,

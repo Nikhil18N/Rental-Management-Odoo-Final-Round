@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { User, IUser } from '../models/User';
+import { User, UserPermission } from '../entities/User';
+import { AppDataSource } from '../config/database';
 import { jwtUtils, JwtPayload } from '../utils/jwt';
 
 // Extend Express Request interface to include user
 declare global {
   namespace Express {
     interface Request {
-      user?: IUser;
+      user?: User;
       tokenPayload?: JwtPayload;
     }
   }
@@ -33,8 +34,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     // Verify token
     const payload = jwtUtils.verifyAccessToken(token);
     
-    // Find user in database
-    const user = await User.findById(payload.userId).select('+permissions');
+    // Find user in database using TypeORM
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({
+      where: { id: parseInt(payload.userId) },
+      select: ['id', 'name', 'email', 'role', 'permissions', 'isActive']
+    });
     
     if (!user) {
       res.status(401).json({
@@ -93,7 +98,7 @@ export const authorize = (...roles: string[]) => {
 /**
  * Permission-based authorization middleware
  */
-export const requirePermission = (...permissions: string[]) => {
+export const requirePermission = (...permissions: UserPermission[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
@@ -105,7 +110,7 @@ export const requirePermission = (...permissions: string[]) => {
 
     const userPermissions = req.user.permissions || [];
     const hasPermission = permissions.some(permission => 
-      userPermissions.includes(permission) || userPermissions.includes('read_all')
+      userPermissions.includes(permission) || userPermissions.includes(UserPermission.READ_ALL)
     );
 
     if (!hasPermission) {
@@ -134,7 +139,12 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
 
     const token = jwtUtils.extractTokenFromHeader(authHeader);
     const payload = jwtUtils.verifyAccessToken(token);
-    const user = await User.findById(payload.userId).select('+permissions');
+    
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({
+      where: { id: parseInt(payload.userId) },
+      select: ['id', 'name', 'email', 'role', 'permissions', 'isActive']
+    });
     
     if (user && user.isActive) {
       req.user = user;
@@ -170,7 +180,7 @@ export const resourceOwnerOrAdmin = (userIdField: string = 'userId') => {
     // Check if user owns the resource
     const resourceUserId = req.params[userIdField] || req.body[userIdField] || req.query[userIdField];
     
-    if (req.user._id.toString() !== resourceUserId) {
+    if (req.user.id.toString() !== resourceUserId) {
       res.status(403).json({
         success: false,
         message: 'Access denied - you can only access your own resources'
@@ -212,7 +222,11 @@ export const validateRefreshToken = async (req: Request, res: Response, next: Ne
 
     const payload = jwtUtils.verifyRefreshToken(refreshToken);
     
-    const user = await User.findById(payload.userId);
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({
+      where: { id: parseInt(payload.userId) },
+      select: ['id', 'name', 'email', 'role', 'permissions', 'isActive']
+    });
     
     if (!user || !user.isActive) {
       res.status(401).json({

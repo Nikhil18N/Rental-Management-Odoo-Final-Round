@@ -5,6 +5,19 @@
 /* RentEase Design System - Modern Rental Management Interface */
 
 @layer base {
+  /* Fix CSS compatibility issues */
+  html,
+  :host {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  [data-sonner-toast][data-swiped=true] {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
   :root {
     /* Core Colors - Modern professional palette */
     --background: 0 0% 100%;

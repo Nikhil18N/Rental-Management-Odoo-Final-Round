@@ -7,10 +7,7 @@ import { AppDataSource } from '../config/database';
 const router = Router();
 const dashboardController = new DashboardController(AppDataSource);
 
-// All dashboard routes require authentication
-router.use(authenticate);
-
-// Test endpoint with mock data
+// Test endpoint with mock data (no auth required for testing)
 router.get('/stats-mock', (req, res) => {
   const mockStats = {
     stats: {
