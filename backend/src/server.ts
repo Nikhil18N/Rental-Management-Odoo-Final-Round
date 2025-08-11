@@ -48,8 +48,10 @@ const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:5174',  // Added for Vite auto-port switching
       'http://localhost:3000',
       'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',  // Added for Vite auto-port switching
       'http://127.0.0.1:3000'
     ];
     
@@ -92,8 +94,10 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',  // Added for Vite auto-port switching
     'http://localhost:3000',
     'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',  // Added for Vite auto-port switching
     'http://127.0.0.1:3000'
   ];
   
