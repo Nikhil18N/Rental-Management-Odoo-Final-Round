@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StatsCard } from "./StatsCard";
+import { Badge } from "@/components/ui/badge";
 import { 
   DollarSign, 
   Package, 
@@ -9,7 +9,11 @@ import {
   ArrowRight,
   Clock,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  MoreHorizontal
 } from "lucide-react";
 
 export function DashboardContent() {
@@ -17,30 +21,42 @@ export function DashboardContent() {
     {
       title: "Total Revenue",
       value: "₹2,45,890",
-      change: "+12.5% from last month",
+      change: "+12.5%",
+      changeText: "from last month",
       changeType: "positive" as const,
       icon: DollarSign,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
       title: "Active Rentals",
       value: "347",
-      change: "+23 from yesterday",
+      change: "+23",
+      changeText: "from yesterday",
       changeType: "positive" as const,
       icon: Package,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
       title: "Total Customers",
       value: "1,249",
-      change: "+18.2% from last month",
+      change: "+18.2%",
+      changeText: "from last month",
       changeType: "positive" as const,
       icon: Users,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
     {
       title: "Pending Returns",
       value: "12",
-      change: "3 overdue (Late fees applicable)",
+      change: "3 overdue",
+      changeText: "requires attention",
       changeType: "negative" as const,
-      icon: Calendar,
+      icon: Clock,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
   ];
 
@@ -48,238 +64,205 @@ export function DashboardContent() {
     { 
       id: "RNT-001", 
       customer: "Rajesh Kumar", 
-      product: "Camera Equipment Set", 
-      status: "pickup_scheduled", 
+      product: "Professional Camera Kit",
       amount: "₹15,000",
-      duration: "3 days",
-      pickupDate: "2025-08-12"
+      status: "active",
+      date: "2025-08-10"
     },
     { 
       id: "RNT-002", 
       customer: "Priya Sharma", 
-      product: "Wedding Decoration", 
-      status: "quotation", 
-      amount: "₹25,000",
-      duration: "1 week",
-      pickupDate: "2025-08-15"
+      product: "Wedding Decoration Set",
+      amount: "₹12,500",
+      status: "pending",
+      date: "2025-08-11"
     },
     { 
       id: "RNT-003", 
       customer: "Arjun Singh", 
-      product: "Sound System", 
-      status: "returned", 
-      amount: "₹8,500",
-      duration: "2 days",
-      pickupDate: "2025-08-08"
+      product: "Sound System Pro",
+      amount: "₹8,000",
+      status: "overdue",
+      date: "2025-08-09"
     },
     { 
       id: "RNT-004", 
       customer: "Meera Gupta", 
-      product: "Furniture Set", 
-      status: "overdue", 
-      amount: "₹12,000",
-      duration: "5 days",
-      pickupDate: "2025-08-05"
+      product: "Furniture Set Deluxe",
+      amount: "₹22,000",
+      status: "completed",
+      date: "2025-08-08"
     },
   ];
 
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "pickup_scheduled":
-        return <Calendar className="w-4 h-4 text-primary" />;
-      case "quotation":
-        return <Clock className="w-4 h-4 text-warning" />;
-      case "returned":
-        return <CheckCircle className="w-4 h-4 text-success" />;
-      case "overdue":
-        return <AlertTriangle className="w-4 h-4 text-destructive" />;
-      case "active":
-        return <Package className="w-4 h-4 text-primary" />;
-      default:
-        return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
+      case "active": return "bg-green-100 text-green-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "overdue": return "bg-red-100 text-red-800";
+      case "completed": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case "pickup_scheduled":
-        return "Pickup Scheduled";
-      case "quotation":
-        return "Quotation";
-      case "returned":
-        return "Returned";
-      case "overdue":
-        return "Overdue";
-      case "active":
-        return "Active Rental";
-      default:
-        return status;
+      case "active": return CheckCircle;
+      case "pending": return Clock;
+      case "overdue": return AlertTriangle;
+      case "completed": return CheckCircle;
+      default: return Clock;
     }
   };
 
   return (
-    <div className="flex-1 space-y-8 p-6 bg-gradient-to-br from-background via-muted/20 to-background">
-      {/* Welcome Header */}
-      <div className="animate-fade-in">
-        <h1 className="text-3xl font-black text-foreground mb-2 tracking-tight">Welcome back, Admin</h1>
-        <p className="text-muted-foreground font-medium">Here's what's happening with your rental business today.</p>
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your rental business.</p>
+        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Quick Action
+        </Button>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <StatsCard 
-            key={index} 
-            {...stat} 
-            className="animate-fade-in"
-            style={{ animationDelay: `${index * 0.1}s` } as React.CSSProperties}
-          />
-        ))}
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                    <div className="flex items-center mt-2">
+                      {stat.changeType === "positive" ? (
+                        <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-red-600 mr-1" />
+                      )}
+                      <span className={`text-sm font-medium ${
+                        stat.changeType === "positive" ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {stat.change}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-1">{stat.changeText}</span>
+                    </div>
+                  </div>
+                  <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                    <Icon className={`w-6 h-6 ${stat.color}`} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Content Grid */}
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Orders */}
-        <Card className="lg:col-span-2 shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/60">
-            <CardTitle className="text-xl font-bold text-foreground">Recent Orders</CardTitle>
-            <Button variant="outline" size="sm" className="hover-lift transition-elegant">
-              View All
+        <Card className="lg:col-span-2 border border-gray-200 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200">
+            <CardTitle className="text-lg font-semibold text-gray-900">Recent Rentals</CardTitle>
+            <Button variant="ghost" size="sm">
+              View all
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {recentOrders.map((order, index) => (
-                <div 
-                  key={order.id} 
-                  className="flex items-center justify-between p-5 bg-secondary/30 backdrop-blur-sm rounded-xl border border-border/40 hover:bg-secondary/50 hover:border-border/60 transition-elegant hover-lift animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-bold text-foreground">{order.id}</span>
-                      {getStatusIcon(order.status)}
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
-                        {getStatusBadge(order.status)}
-                      </span>
+          <CardContent className="p-0">
+            <div className="space-y-0">
+              {recentOrders.map((order, index) => {
+                const StatusIcon = getStatusIcon(order.status);
+                return (
+                  <div key={order.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <Package className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{order.id}</p>
+                        <p className="text-sm text-gray-600">{order.customer}</p>
+                        <p className="text-sm text-gray-500">{order.product}</p>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">{order.customer}</p>
-                    <p className="text-sm font-semibold text-foreground">{order.product}</p>
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <span>Duration: {order.duration}</span>
-                      <span>•</span>
-                      <span>Pickup: {order.pickupDate}</span>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">{order.amount}</p>
+                      <Badge className={getStatusColor(order.status)}>
+                        <StatusIcon className="w-3 h-3 mr-1" />
+                        {order.status}
+                      </Badge>
+                      <p className="text-xs text-gray-500 mt-1">{order.date}</p>
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="font-black text-lg text-foreground">{order.amount}</p>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
-          <CardHeader className="border-b border-border/60">
-            <CardTitle className="text-xl font-bold text-foreground">Quick Actions</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <Button className="w-full justify-start h-12 bg-gradient-primary hover:shadow-elegant transition-elegant hover-lift font-semibold">
-              <Package className="w-5 h-5 mr-3" />
-              Create Rental Quotation
+          <CardContent className="space-y-4">
+            <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="w-4 h-4 mr-3" />
+              New Rental
             </Button>
-            <Button variant="outline" className="w-full justify-start h-12 hover-lift transition-elegant font-semibold border-border/60">
-              <Calendar className="w-5 h-5 mr-3" />
-              Schedule Pickup/Return
+            <Button variant="outline" className="w-full justify-start">
+              <Users className="w-4 h-4 mr-3" />
+              Add Customer
             </Button>
-            <Button variant="outline" className="w-full justify-start h-12 hover-lift transition-elegant font-semibold border-border/60">
-              <Users className="w-5 h-5 mr-3" />
-              Register Customer
+            <Button variant="outline" className="w-full justify-start">
+              <Package className="w-4 h-4 mr-3" />
+              Add Product
             </Button>
-            <Button variant="outline" className="w-full justify-start h-12 hover-lift transition-elegant font-semibold border-border/60">
-              <DollarSign className="w-5 h-5 mr-3" />
-              Process Payment
-            </Button>
-            <Button variant="outline" className="w-full justify-start h-12 hover-lift transition-elegant font-semibold border-border/60">
-              <AlertTriangle className="w-5 h-5 mr-3" />
-              Handle Overdue Returns
+            <Button variant="outline" className="w-full justify-start">
+              <Calendar className="w-4 h-4 mr-3" />
+              View Calendar
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Additional Insights */}
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
-          <CardHeader className="border-b border-border/60">
-            <CardTitle className="text-xl font-bold text-foreground">Popular Products</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-5">
-              {[
-                { name: "Wedding Decoration Sets", rentals: 45, revenue: "₹67,500", trend: "+15%" },
-                { name: "Camera Equipment", rentals: 32, revenue: "₹48,000", trend: "+8%" },
-                { name: "Sound Systems", rentals: 28, revenue: "₹35,600", trend: "+12%" },
-                { name: "Furniture Sets", rentals: 19, revenue: "₹28,500", trend: "+5%" },
-              ].map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl hover:bg-secondary/50 transition-elegant hover-lift animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="space-y-1">
-                    <p className="font-bold text-foreground">{product.name}</p>
-                    <p className="text-sm text-muted-foreground font-medium">{product.rentals} rentals</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-foreground">{product.revenue}</p>
-                    <p className="text-sm text-success font-semibold">{product.trend}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-elegant hover:shadow-floating transition-elegant animate-slide-up">
-          <CardHeader className="border-b border-border/60">
-            <CardTitle className="text-xl font-bold text-foreground">System Alerts</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-5">
-              <div className="flex items-start space-x-4 p-4 bg-warning/10 rounded-xl border border-warning/30 hover:bg-warning/20 transition-elegant hover-lift animate-fade-in">
-                <div className="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-warning" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-foreground">3 Overdue Returns</p>
-                  <p className="text-sm text-muted-foreground font-medium">Items not returned on scheduled date</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4 p-4 bg-success/10 rounded-xl border border-success/30 hover:bg-success/20 transition-elegant hover-lift animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                <div className="w-10 h-10 bg-success/20 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-success" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-foreground">Payment Received</p>
-                  <p className="text-sm text-muted-foreground font-medium">₹25,000 payment processed successfully</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4 p-4 bg-primary/10 rounded-xl border border-primary/30 hover:bg-primary/20 transition-elegant hover-lift animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-foreground">5 Pending Approvals</p>
-                  <p className="text-sm text-muted-foreground font-medium">New rental requests awaiting approval</p>
-                </div>
+      {/* Recent Activity */}
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-gray-900">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Payment received from Rajesh Kumar</p>
+                <p className="text-xs text-gray-500">₹15,000 for Camera Kit rental - 2 minutes ago</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">New booking created</p>
+                <p className="text-xs text-gray-500">Wedding Decoration Set for Priya Sharma - 5 minutes ago</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Return overdue</p>
+                <p className="text-xs text-gray-500">Sound System Pro from Arjun Singh - 1 hour ago</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -14,7 +14,9 @@ import {
   Bell,
   ClipboardList,
   Clock,
-  Calculator
+  Calculator,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 interface SidebarProps {
@@ -23,14 +25,14 @@ interface SidebarProps {
 
 const navigation = [
   { name: "Dashboard", icon: Home, href: "/" },
-  { name: "Rental Products", icon: Package, href: "/products" },
+  { name: "Products", icon: Package, href: "/products" },
   { name: "Quotations", icon: ClipboardList, href: "/quotations" },
   { name: "Bookings", icon: Calendar, href: "/bookings" },
   { name: "Customers", icon: Users, href: "/customers" },
-  { name: "Delivery Management", icon: Truck, href: "/delivery" },
+  { name: "Delivery", icon: Truck, href: "/delivery" },
   { name: "Invoicing", icon: FileText, href: "/invoicing" },
   { name: "Pricelists", icon: Calculator, href: "/pricelists" },
-  { name: "Returns & Delays", icon: Clock, href: "/returns" },
+  { name: "Returns", icon: Clock, href: "/returns" },
   { name: "Payments", icon: CreditCard, href: "/payments" },
   { name: "Reports", icon: BarChart3, href: "/reports" },
   { name: "Notifications", icon: Bell, href: "/notifications" },
@@ -41,19 +43,19 @@ export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
   
   return (
-    <div className={cn("flex h-full w-64 flex-col bg-gradient-sidebar border-r border-border/60 backdrop-blur-sm", className)}>
+    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200", className)}>
       {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b border-border/60">
-        <div className="flex items-center space-x-3 animate-fade-in">
-          <div className="w-9 h-9 bg-gradient-primary rounded-xl flex items-center justify-center shadow-soft hover-glow transition-elegant">
-            <Package className="w-5 h-5 text-primary-foreground" />
+      <div className="flex h-16 items-center px-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+            <Package className="w-4 h-4 text-white" />
           </div>
-          <span className="text-xl font-bold text-foreground tracking-tight">RentVista</span>
+          <span className="text-lg font-bold text-gray-900">RentEase</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-6">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
@@ -61,14 +63,13 @@ export function Sidebar({ className }: SidebarProps) {
           return (
             <Link key={item.name} to={item.href}>
               <Button
-                variant={isActive ? "default" : "ghost"}
+                variant="ghost"
                 className={cn(
-                  "w-full justify-start h-11 px-4 font-medium rounded-xl transition-elegant animate-fade-in",
+                  "w-full justify-start h-10 px-3 font-medium rounded-lg transition-all duration-200",
                   isActive 
-                    ? "bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-floating" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover-lift"
+                    ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 )}
-                style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <Icon className="w-4 h-4 mr-3" />
                 {item.name}
@@ -79,14 +80,14 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* User Profile */}
-      <div className="border-t border-border/60 p-4 bg-card/50 backdrop-blur-sm">
-        <div className="flex items-center space-x-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary/80 transition-elegant hover-lift cursor-pointer">
-          <div className="w-10 h-10 bg-gradient-accent rounded-full flex items-center justify-center shadow-soft">
-            <span className="text-sm font-semibold text-accent-foreground">AD</span>
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-sm font-medium text-white">AU</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">admin@rentvista.com</p>
+            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+            <p className="text-xs text-gray-500 truncate">admin@rentease.com</p>
           </div>
         </div>
       </div>
