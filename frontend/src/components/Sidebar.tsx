@@ -11,7 +11,10 @@ import {
   Settings,
   Home,
   FileText,
-  Bell
+  Bell,
+  ClipboardList,
+  Clock,
+  Calculator
 } from "lucide-react";
 
 interface SidebarProps {
@@ -20,15 +23,18 @@ interface SidebarProps {
 
 const navigation = [
   { name: "Dashboard", icon: Home, href: "/" },
-  { name: "Products", icon: Package, href: "/products" },
+  { name: "Rental Products", icon: Package, href: "/products" },
+  { name: "Quotations", icon: ClipboardList, href: "/quotations" },
   { name: "Bookings", icon: Calendar, href: "/bookings" },
   { name: "Customers", icon: Users, href: "/customers" },
-  { name: "Orders", icon: FileText, href: "#" },
-  { name: "Deliveries", icon: Truck, href: "#" },
-  { name: "Payments", icon: CreditCard, href: "#" },
-  { name: "Reports", icon: BarChart3, href: "#" },
-  { name: "Notifications", icon: Bell, href: "#" },
-  { name: "Settings", icon: Settings, href: "#" },
+  { name: "Delivery Management", icon: Truck, href: "/delivery" },
+  { name: "Invoicing", icon: FileText, href: "/invoicing" },
+  { name: "Pricelists", icon: Calculator, href: "/pricelists" },
+  { name: "Returns & Delays", icon: Clock, href: "/returns" },
+  { name: "Payments", icon: CreditCard, href: "/payments" },
+  { name: "Reports", icon: BarChart3, href: "/reports" },
+  { name: "Notifications", icon: Bell, href: "/notifications" },
+  { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
