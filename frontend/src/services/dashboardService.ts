@@ -13,7 +13,7 @@ const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('auth_token'); // Use correct token key
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('auth_token'); // Use correct token key
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -99,7 +99,7 @@ class DashboardService {
   // Get dashboard statistics
   async getDashboardStats(period = '30'): Promise<DashboardData> {
     try {
-      const response = await api.get(`/dashboard/stats-mock?period=${period}`);
+      const response = await api.get(`/dashboard/stats?period=${period}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -110,7 +110,7 @@ class DashboardService {
   // Get recent bookings
   async getRecentBookings(limit = 10): Promise<RecentBooking[]> {
     try {
-      const response = await api.get(`/dashboard/recent-bookings-mock?limit=${limit}`);
+      const response = await api.get(`/dashboard/recent-bookings?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching recent bookings:', error);
@@ -121,7 +121,7 @@ class DashboardService {
   // Get recent activities
   async getRecentActivities(limit = 10): Promise<RecentActivity[]> {
     try {
-      const response = await api.get(`/dashboard/recent-activities-mock?limit=${limit}`);
+      const response = await api.get(`/dashboard/recent-activities?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching recent activities:', error);

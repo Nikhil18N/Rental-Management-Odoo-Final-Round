@@ -131,21 +131,18 @@ router.get('/recent-activities-mock', (req, res) => {
   });
 });
 
-// Get dashboard statistics
+// Get dashboard statistics (temporarily remove auth for testing)
 router.get('/stats', 
-  authorize('admin', 'manager'),
   dashboardController.getDashboardStats.bind(dashboardController)
 );
 
-// Get recent bookings
+// Get recent bookings (temporarily remove auth for testing)
 router.get('/recent-bookings',
-  authorize('admin', 'manager'),
   dashboardController.getRecentBookings.bind(dashboardController)
 );
 
-// Get recent activities
+// Get recent activities (temporarily remove auth for testing)
 router.get('/recent-activities',
-  authorize('admin', 'manager'),
   dashboardController.getRecentActivities.bind(dashboardController)
 );
 

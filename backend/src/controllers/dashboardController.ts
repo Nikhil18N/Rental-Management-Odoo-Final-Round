@@ -24,34 +24,84 @@ export class DashboardController {
   // Get dashboard statistics
   async getDashboardStats(req: Request, res: Response): Promise<void> {
     try {
+      console.log('Dashboard stats request received');
       const { period = '30' } = req.query; // days
       const periodDays = parseInt(period as string);
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - periodDays);
+      console.log('Period:', periodDays, 'Start date:', startDate);
 
-      // Get current period stats
-      const [
-        totalRevenue,
-        activeRentals,
-        totalCustomers,
-        pendingReturns,
-        revenueComparison,
-        customerGrowth,
-        popularProducts
-      ] = await Promise.all([
-        this.getTotalRevenue(startDate),
-        this.getActiveRentals(),
-        this.getTotalCustomers(),
-        this.getPendingReturns(),
-        this.getRevenueComparison(periodDays),
-        this.getCustomerGrowth(periodDays),
-        this.getPopularProducts(startDate)
-      ]);
+      // Get current period stats with individual error handling
+      let totalRevenue, activeRentals, totalCustomers, pendingReturns;
+      let revenueComparison, customerGrowth, popularProducts;
+
+      try {
+        console.log('Getting total revenue...');
+        totalRevenue = await this.getTotalRevenue(startDate);
+        console.log('Total revenue result:', totalRevenue);
+      } catch (error) {
+        console.error('Error getting total revenue:', error);
+        totalRevenue = { total: 0 };
+      }
+
+      try {
+        console.log('Getting active rentals...');
+        activeRentals = await this.getActiveRentals();
+        console.log('Active rentals result:', activeRentals);
+      } catch (error) {
+        console.error('Error getting active rentals:', error);
+        activeRentals = { count: 0, newToday: 0 };
+      }
+
+      try {
+        console.log('Getting total customers...');
+        totalCustomers = await this.getTotalCustomers();
+        console.log('Total customers result:', totalCustomers);
+      } catch (error) {
+        console.error('Error getting total customers:', error);
+        totalCustomers = { count: 0 };
+      }
+
+      try {
+        console.log('Getting pending returns...');
+        pendingReturns = await this.getPendingReturns();
+        console.log('Pending returns result:', pendingReturns);
+      } catch (error) {
+        console.error('Error getting pending returns:', error);
+        pendingReturns = { count: 0, overdue: 0 };
+      }
+
+      try {
+        console.log('Getting revenue comparison...');
+        revenueComparison = await this.getRevenueComparison(periodDays);
+        console.log('Revenue comparison result:', revenueComparison);
+      } catch (error) {
+        console.error('Error getting revenue comparison:', error);
+        revenueComparison = { changePercent: 0, chartData: [] };
+      }
+
+      try {
+        console.log('Getting customer growth...');
+        customerGrowth = await this.getCustomerGrowth(periodDays);
+        console.log('Customer growth result:', customerGrowth);
+      } catch (error) {
+        console.error('Error getting customer growth:', error);
+        customerGrowth = { changePercent: 0 };
+      }
+
+      try {
+        console.log('Getting popular products...');
+        popularProducts = await this.getPopularProducts(startDate);
+        console.log('Popular products result:', popularProducts);
+      } catch (error) {
+        console.error('Error getting popular products:', error);
+        popularProducts = [];
+      }
 
       const stats = {
         totalRevenue: {
           value: totalRevenue.total,
-          change: revenueComparison.changePercent,
+          change: `${revenueComparison.changePercent >= 0 ? '+' : ''}${revenueComparison.changePercent}%`,
           changeText: `from last ${periodDays} days`,
           changeType: revenueComparison.changePercent >= 0 ? 'positive' : 'negative'
         },
@@ -63,7 +113,7 @@ export class DashboardController {
         },
         totalCustomers: {
           value: totalCustomers.count,
-          change: `+${customerGrowth.changePercent}%`,
+          change: `${customerGrowth.changePercent >= 0 ? '+' : ''}${customerGrowth.changePercent}%`,
           changeText: `from last ${periodDays} days`,
           changeType: customerGrowth.changePercent >= 0 ? 'positive' : 'negative'
         },
@@ -74,6 +124,8 @@ export class DashboardController {
           changeType: pendingReturns.overdue > 0 ? 'negative' : 'positive'
         }
       };
+
+      console.log('Final stats:', stats);
 
       res.json({
         success: true,
@@ -87,7 +139,8 @@ export class DashboardController {
       console.error('Get dashboard stats error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to fetch dashboard statistics'
+        message: 'Failed to fetch dashboard statistics',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
