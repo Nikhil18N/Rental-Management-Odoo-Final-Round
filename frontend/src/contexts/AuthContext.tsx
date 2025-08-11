@@ -193,7 +193,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const hasPermission = (permission: string): boolean => {
-    return user?.permissions.includes(permission) || user?.permissions.includes('read_all') || false;
+    // Admins and managers have implicit access to read-level pages
+    if (user?.role === 'admin' || user?.role === 'manager') return true;
+    return (
+      user?.permissions.includes(permission) ||
+      user?.permissions.includes('read_all') ||
+      false
+    );
   };
 
   const hasRole = (role: string | string[]): boolean => {

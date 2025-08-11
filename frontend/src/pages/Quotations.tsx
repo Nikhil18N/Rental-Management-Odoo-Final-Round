@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -15,61 +16,130 @@ import {
   Eye,
   CheckCircle,
   Clock,
-  Send
+  Send,
+  X,
+  Loader2
 } from "lucide-react";
+import quotationsService, { Quotation as ApiQuotation } from "@/services/quotationsService";
 
 const Quotations = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [quotations, setQuotations] = useState<ApiQuotation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const quotations = [
+  // Fetch quotations on component mount
+  useEffect(() => {
+    loadQuotations();
+  }, []);
+
+  const loadQuotations = async () => {
+    try {
+      setLoading(true);
+      const response = await quotationsService.getQuotations({
+        page: 1,
+        limit: 50,
+        search: searchTerm
+      });
+      setQuotations(response.data.quotations);
+    } catch (error) {
+      console.error('Error loading quotations:', error);
+      // Fallback to mock data if API fails
+      setQuotations(mockQuotations);
+      toast({
+        title: "Using Demo Data",
+        description: "Connected to demo data while backend is starting up.",
+        variant: "default",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data as fallback
+  const mockQuotations: ApiQuotation[] = [
     {
-      id: "QUO-001",
-      customer: "Rajesh Kumar",
-      product: "Camera Equipment Set",
-      amount: "₹15,000",
-      duration: "3 days",
-      status: "draft",
-      validUntil: "2025-08-20",
-      createdDate: "2025-08-10"
+      id: 1,
+      quotationNumber: "QUO-001",
+      customerId: 1,
+      customer: {
+        id: 1,
+        name: "Rajesh Kumar",
+        email: "rajesh@email.com",
+        phone: "+91 9876543210",
+        customerCode: "CUST-001"
+      },
+      proposedStartDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+      proposedEndDate: new Date(Date.now() + 10 * 86400000).toISOString(),
+      validUntil: new Date(Date.now() + 14 * 86400000).toISOString(),
+      pickupLocation: { address: "Bangalore Convention Center", coordinates: null },
+      returnLocation: { address: "Bangalore Convention Center", coordinates: null },
+      deliveryRequired: true,
+      pickupRequired: true,
+      subtotal: 12000,
+      discountAmount: 0,
+      discountType: 'fixed' as const,
+      taxAmount: 2160,
+      taxRate: 18,
+      deliveryCharges: 500,
+      totalAmount: 14660,
+      securityDeposit: 5000,
+      status: "draft" as const,
+      notes: "Client prefers morning delivery",
+      termsConditions: "Standard terms and conditions apply",
+      internalNotes: "Professional camera setup for corporate event",
+      items: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: 1
     },
     {
-      id: "QUO-002", 
-      customer: "Priya Sharma",
-      product: "Wedding Decoration Package",
-      amount: "₹25,000",
-      duration: "1 week",
-      status: "sent",
-      validUntil: "2025-08-25",
-      createdDate: "2025-08-09"
-    },
-    {
-      id: "QUO-003",
-      customer: "Arjun Singh", 
-      product: "Sound System Pro",
-      amount: "₹8,500",
-      duration: "2 days",
-      status: "confirmed",
-      validUntil: "2025-08-18",
-      createdDate: "2025-08-08"
-    },
-    {
-      id: "QUO-004",
-      customer: "Meera Gupta",
-      product: "Furniture Set Deluxe",
-      amount: "₹12,000", 
-      duration: "5 days",
-      status: "expired",
-      validUntil: "2025-08-12",
-      createdDate: "2025-08-05"
-    },
+      id: 2,
+      quotationNumber: "QUO-002",
+      customerId: 2,
+      customer: {
+        id: 2,
+        name: "Priya Sharma",
+        email: "priya@email.com",
+        phone: "+91 9876543211",
+        customerCode: "CUST-002"
+      },
+      proposedStartDate: new Date(Date.now() + 14 * 86400000).toISOString(),
+      proposedEndDate: new Date(Date.now() + 15 * 86400000).toISOString(),
+      validUntil: new Date(Date.now() + 21 * 86400000).toISOString(),
+      pickupLocation: { address: "Garden Palace Wedding Hall", coordinates: null },
+      returnLocation: { address: "Garden Palace Wedding Hall", coordinates: null },
+      deliveryRequired: true,
+      pickupRequired: true,
+      subtotal: 25000,
+      discountAmount: 2500,
+      discountType: 'fixed' as const,
+      taxAmount: 4050,
+      taxRate: 18,
+      deliveryCharges: 1000,
+      totalAmount: 27550,
+      securityDeposit: 10000,
+      status: "sent" as const,
+      notes: "Premium decoration package requested",
+      termsConditions: "50% advance required for booking",
+      internalNotes: "Complete wedding decoration and setup",
+      sentAt: new Date(Date.now() - 86400000).toISOString(),
+      items: [],
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      createdBy: 1
+    }
   ];
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { label: "Draft", className: "bg-gray-100 text-gray-800" },
       sent: { label: "Sent", className: "bg-blue-100 text-blue-800" },
-      confirmed: { label: "Confirmed", className: "bg-green-100 text-green-800" },
+      viewed: { label: "Viewed", className: "bg-purple-100 text-purple-800" },
+      accepted: { label: "Accepted", className: "bg-green-100 text-green-800" },
+      rejected: { label: "Rejected", className: "bg-red-100 text-red-800" },
       expired: { label: "Expired", className: "bg-red-100 text-red-800" },
+      converted: { label: "Converted", className: "bg-green-100 text-green-800" },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
@@ -86,19 +156,25 @@ const Quotations = () => {
         return <Edit className="w-4 h-4 text-gray-500" />;
       case "sent":
         return <Send className="w-4 h-4 text-blue-500" />;
-      case "confirmed":
+      case "viewed":
+        return <Eye className="w-4 h-4 text-purple-500" />;
+      case "accepted":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "rejected":
+        return <X className="w-4 h-4 text-red-500" />;
       case "expired":
         return <Clock className="w-4 h-4 text-red-500" />;
+      case "converted":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
       default:
         return <ClipboardList className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const filteredQuotations = quotations.filter(quotation =>
-    quotation.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    quotation.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    quotation.id.toLowerCase().includes(searchTerm.toLowerCase())
+    quotation.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    quotation.quotationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    quotation.id.toString().includes(searchTerm)
   );
 
   return (
@@ -200,23 +276,23 @@ const Quotations = () => {
                 >
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center space-x-3">
-                      <span className="font-semibold">{quotation.id}</span>
+                      <span className="font-semibold">{quotation.quotationNumber}</span>
                       {getStatusIcon(quotation.status)}
                       {getStatusBadge(quotation.status)}
                     </div>
-                    <p className="text-sm font-medium">{quotation.customer}</p>
-                    <p className="text-sm text-muted-foreground">{quotation.product}</p>
+                    <p className="text-sm font-medium">{quotation.customer?.name || 'No Customer'}</p>
+                    <p className="text-sm text-muted-foreground">Items: {quotation.items?.length || 0} product(s)</p>
                     <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <span>Duration: {quotation.duration}</span>
+                      <span>Start: {new Date(quotation.proposedStartDate).toLocaleDateString()}</span>
                       <span>•</span>
-                      <span>Valid until: {quotation.validUntil}</span>
+                      <span>Valid until: {new Date(quotation.validUntil).toLocaleDateString()}</span>
                       <span>•</span>
-                      <span>Created: {quotation.createdDate}</span>
+                      <span>Created: {new Date(quotation.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                   
                   <div className="text-right space-y-2">
-                    <p className="text-lg font-bold">{quotation.amount}</p>
+                    <p className="text-lg font-bold">₹{quotation.totalAmount.toLocaleString()}</p>
                     <div className="flex items-center space-x-2">
                       <Button variant="outline" size="sm">
                         <Eye className="w-4 h-4 mr-1" />
@@ -226,7 +302,7 @@ const Quotations = () => {
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
-                      {quotation.status === "confirmed" && (
+                      {quotation.status === "accepted" && (
                         <Button size="sm" className="bg-green-600 hover:bg-green-700">
                           <CheckCircle className="w-4 h-4 mr-1" />
                           Convert to Order

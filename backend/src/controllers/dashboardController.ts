@@ -309,13 +309,13 @@ export class DashboardController {
     const pendingReturns = await this.bookingRepository
       .createQueryBuilder('booking')
       .where('booking.status = :status', { status: 'active' })
-      .andWhere('booking.endDateTime < :now', { now })
+      .andWhere('booking.returnDate < :now', { now })
       .getCount();
 
     const overdue = await this.bookingRepository
       .createQueryBuilder('booking')
       .where('booking.status = :status', { status: 'active' })
-      .andWhere('booking.endDateTime < :cutoff', { 
+      .andWhere('booking.returnDate < :cutoff', { 
         cutoff: new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 hours ago
       })
       .getCount();
@@ -410,7 +410,7 @@ export class DashboardController {
       .leftJoin('item.product', 'product')
       .select('product.name', 'productName')
       .addSelect('COUNT(item.id)', 'bookingCount')
-      .addSelect('SUM(item.totalPrice)', 'totalRevenue')
+      .addSelect('SUM(item.lineTotal)', 'totalRevenue')
       .where('booking.createdAt >= :startDate', { startDate })
       .groupBy('product.id, product.name')
       .orderBy('bookingCount', 'DESC')

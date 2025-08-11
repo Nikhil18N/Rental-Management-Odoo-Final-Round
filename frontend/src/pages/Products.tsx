@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -12,83 +13,147 @@ import {
   DollarSign,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Filter,
+  Loader2
 } from "lucide-react";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  pricePerHour: number;
-  pricePerDay: number;
-  pricePerWeek: number;
-  availability: "available" | "rented" | "maintenance";
-  totalUnits: number;
-  availableUnits: number;
-  description: string;
-  image?: string;
-}
+import productsService, { Product as ApiProduct } from "@/services/productsService";
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const products: Product[] = [
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const { toast } = useToast();
+
+  // Fetch products on component mount
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await productsService.getProducts({
+        page: 1,
+        limit: 50,
+        search: searchTerm,
+        categoryId: selectedCategory ? parseInt(selectedCategory) : undefined
+      });
+      setProducts(response.data.products);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      // Fallback to mock data if API fails
+      setProducts(mockProducts);
+      toast({
+        title: "Using Demo Data",
+        description: "Connected to demo data while backend is starting up.",
+        variant: "default",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data as fallback
+  const mockProducts: ApiProduct[] = [
     {
-      id: "PRD-001",
+      id: 1,
       name: "Professional Camera Kit",
-      category: "Photography",
-      pricePerHour: 500,
-      pricePerDay: 2000,
-      pricePerWeek: 12000,
-      availability: "available",
-      totalUnits: 5,
-      availableUnits: 3,
-      description: "Complete professional photography setup with DSLR, lenses, and accessories"
+      slug: "professional-camera-kit",
+      sku: "PRD-001",
+      description: "Complete professional photography setup with DSLR, lenses, and accessories",
+      baseRentalRate: 2000,
+      securityDeposit: 10000,
+      categoryId: 1,
+      category: {
+        id: 1,
+        name: "Photography"
+      },
+      condition: "excellent",
+      rentalUnits: "day",
+      minRentalDuration: 1,
+      isRentable: true,
+      totalQuantity: 5,
+      availableQuantity: 3,
+      reservedQuantity: 1,
+      maintenanceQuantity: 0,
+      tags: ["camera", "photography", "professional"],
+      images: [],
+      isActive: true,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "PRD-002", 
+      id: 2,
       name: "Wedding Decoration Set",
-      category: "Events",
-      pricePerHour: 0,
-      pricePerDay: 15000,
-      pricePerWeek: 90000,
-      availability: "available",
-      totalUnits: 3,
-      availableUnits: 2,
-      description: "Complete wedding decoration package including flowers, lights, and setup"
+      slug: "wedding-decoration-set",
+      sku: "PRD-002",
+      description: "Complete wedding decoration package including flowers, lights, and setup",
+      baseRentalRate: 15000,
+      securityDeposit: 25000,
+      categoryId: 2,
+      category: {
+        id: 2,
+        name: "Events"
+      },
+      condition: "good",
+      rentalUnits: "day",
+      minRentalDuration: 1,
+      isRentable: true,
+      totalQuantity: 3,
+      availableQuantity: 2,
+      reservedQuantity: 0,
+      maintenanceQuantity: 0,
+      tags: ["wedding", "decoration", "events"],
+      images: [],
+      isActive: true,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "PRD-003",
+      id: 3,
       name: "Sound System Pro",
-      category: "Audio",
-      pricePerHour: 800,
-      pricePerDay: 3000,
-      pricePerWeek: 18000,
-      availability: "rented",
-      totalUnits: 4,
-      availableUnits: 1,
-      description: "Professional grade sound system with speakers, microphones, and mixing console"
-    },
-    {
-      id: "PRD-004",
-      name: "Party Furniture Set",
-      category: "Furniture",
-      pricePerHour: 0,
-      pricePerDay: 5000,
-      pricePerWeek: 25000,
-      availability: "available",
-      totalUnits: 10,
-      availableUnits: 8,
-      description: "Tables, chairs, and lounge furniture for events and parties"
+      slug: "sound-system-pro",
+      sku: "PRD-003",
+      description: "Professional grade sound system with speakers, microphones, and mixing console",
+      baseRentalRate: 3000,
+      securityDeposit: 15000,
+      categoryId: 3,
+      category: {
+        id: 3,
+        name: "Audio"
+      },
+      condition: "excellent",
+      rentalUnits: "day",
+      minRentalDuration: 1,
+      isRentable: true,
+      totalQuantity: 4,
+      availableQuantity: 1,
+      reservedQuantity: 0,
+      maintenanceQuantity: 0,
+      tags: ["audio", "sound", "professional"],
+      images: [],
+      isActive: true,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ];
 
-  const getAvailabilityColor = (status: string) => {
+  const getAvailabilityStatus = (product: ApiProduct) => {
+    if (product.availableQuantity > 0) return "available";
+    if (product.maintenanceQuantity > 0) return "maintenance";
+    return "unavailable";
+  };
+
+  const getAvailabilityColor = (product: ApiProduct) => {
+    const status = getAvailabilityStatus(product);
     switch (status) {
       case "available":
         return "bg-green-100 text-green-800";
-      case "rented":
-        return "bg-yellow-100 text-yellow-800";
       case "maintenance":
         return "bg-red-100 text-red-800";
       default:
@@ -98,8 +163,40 @@ export default function Products() {
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    product.category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSearch = async () => {
+    await loadProducts();
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    try {
+      await productsService.deleteProduct(productId);
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      loadProducts();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="ml-2">Loading products...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -126,10 +223,16 @@ export default function Products() {
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-10"
               />
             </div>
+            <Button variant="outline" onClick={handleSearch}>
+              <Search className="w-4 h-4 mr-2" />
+              Search
+            </Button>
             <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
               Filter by Category
             </Button>
           </div>
@@ -155,7 +258,7 @@ export default function Products() {
               <Calendar className="w-8 h-8 text-green-600" />
               <div>
                 <p className="text-2xl font-bold text-green-600">
-                  {products.filter(p => p.availability === "available").length}
+                  {products.filter(p => getAvailabilityStatus(p) === "available").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Available</p>
               </div>
@@ -168,7 +271,7 @@ export default function Products() {
               <DollarSign className="w-8 h-8 text-yellow-600" />
               <div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {products.filter(p => p.availability === "rented").length}
+                  {products.filter(p => p.totalQuantity - p.availableQuantity - p.maintenanceQuantity > 0).length}
                 </p>
                 <p className="text-sm text-muted-foreground">On Rent</p>
               </div>
@@ -181,7 +284,7 @@ export default function Products() {
               <Package className="w-8 h-8 text-red-600" />
               <div>
                 <p className="text-2xl font-bold text-red-600">
-                  {products.filter(p => p.availability === "maintenance").length}
+                  {products.filter(p => getAvailabilityStatus(p) === "maintenance").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Maintenance</p>
               </div>
@@ -198,10 +301,10 @@ export default function Products() {
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-lg">{product.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{product.category}</p>
+                  <p className="text-sm text-muted-foreground">{product.category.name}</p>
                 </div>
-                <Badge className={getAvailabilityColor(product.availability)}>
-                  {product.availability}
+                <Badge className={getAvailabilityColor(product)}>
+                  {getAvailabilityStatus(product)}
                 </Badge>
               </div>
             </CardHeader>
@@ -212,11 +315,10 @@ export default function Products() {
               <div className="space-y-2">
                 <h4 className="font-medium">Pricing:</h4>
                 <div className="text-sm space-y-1">
-                  {product.pricePerHour > 0 && (
-                    <p>₹{product.pricePerHour}/hour</p>
+                  <p>₹{product.baseRentalRate}/{product.rentalUnits}</p>
+                  {product.securityDeposit && (
+                    <p className="text-muted-foreground">Security: ₹{product.securityDeposit}</p>
                   )}
-                  <p>₹{product.pricePerDay}/day</p>
-                  <p>₹{product.pricePerWeek}/week</p>
                 </div>
               </div>
               
@@ -224,7 +326,7 @@ export default function Products() {
               <div>
                 <h4 className="font-medium mb-1">Availability:</h4>
                 <p className="text-sm text-muted-foreground">
-                  {product.availableUnits} of {product.totalUnits} units available
+                  {product.availableQuantity} of {product.totalQuantity} units available
                 </p>
               </div>
 
@@ -238,7 +340,12 @@ export default function Products() {
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
-                <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-red-600 hover:text-red-700"
+                  onClick={() => handleDeleteProduct(product.id)}
+                >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

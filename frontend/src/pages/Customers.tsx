@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -15,127 +16,98 @@ import {
   DollarSign,
   Eye,
   Edit,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  registrationDate: string;
-  totalBookings: number;
-  totalSpent: number;
-  status: "active" | "inactive" | "vip";
-  rating: number;
-  lastBooking?: string;
-}
+import customersService, { Customer as ApiCustomer } from "@/services/customersService";
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  
-  const customers: Customer[] = [
+  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch customers on component mount
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await customersService.getCustomers({
+        page: 1,
+        limit: 50,
+        search: searchTerm
+      });
+      setCustomers(response.data.customers);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      // Fallback to mock data if API fails
+      setCustomers(mockCustomers);
+      toast({
+        title: "Using Demo Data",
+        description: "Connected to demo data while backend is starting up.",
+        variant: "default",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data as fallback
+  const mockCustomers: ApiCustomer[] = [
     {
-      id: "CUST-001",
+      id: 1,
+      customerCode: "CUST-001",
       name: "Rajesh Kumar",
       email: "rajesh.kumar@email.com",
       phone: "+91 98765 43210",
-      address: "123 MG Road",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "560001",
-      registrationDate: "2025-01-15",
+      address: {
+        street: "123 MG Road",
+        city: "Bangalore",
+        state: "Karnataka",
+        zipCode: "560001",
+        country: "India"
+      },
+      customerType: "individual",
+      preferredCommunication: "email",
+      status: "active",
       totalBookings: 12,
-      totalSpent: 85000,
-      status: "vip",
-      rating: 4.8,
-      lastBooking: "2025-08-10"
+      totalRevenue: 85000,
+      notes: "Reliable customer, prefers professional photography equipment",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "CUST-002",
+      id: 2,
+      customerCode: "CUST-002",
       name: "Priya Sharma",
-      email: "priya.sharma@email.com", 
+      email: "priya.sharma@email.com",
       phone: "+91 98765 43211",
-      address: "456 Brigade Road",
-      city: "Bangalore",
-      state: "Karnataka", 
-      pincode: "560025",
-      registrationDate: "2025-02-20",
+      address: {
+        street: "456 Brigade Road",
+        city: "Bangalore",
+        state: "Karnataka",
+        zipCode: "560025",
+        country: "India"
+      },
+      customerType: "business",
+      companyName: "Event Planners Inc",
+      preferredCommunication: "phone",
+      status: "verified",
       totalBookings: 8,
-      totalSpent: 62000,
-      status: "active",
-      rating: 4.5,
-      lastBooking: "2025-08-09"
-    },
-    {
-      id: "CUST-003",
-      name: "Arjun Singh",
-      email: "arjun.singh@email.com",
-      phone: "+91 98765 43212", 
-      address: "789 Commercial Street",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "560001",
-      registrationDate: "2025-03-10",
-      totalBookings: 5,
-      totalSpent: 35000,
-      status: "active",
-      rating: 4.2,
-      lastBooking: "2025-08-08"
-    },
-    {
-      id: "CUST-004",
-      name: "Meera Gupta",
-      email: "meera.gupta@email.com",
-      phone: "+91 98765 43213",
-      address: "321 Indiranagar",
-      city: "Bangalore", 
-      state: "Karnataka",
-      pincode: "560038",
-      registrationDate: "2025-04-05",
-      totalBookings: 3,
-      totalSpent: 22000,
-      status: "active",
-      rating: 4.0,
-      lastBooking: "2025-08-05"
-    },
-    {
-      id: "CUST-005",
-      name: "Vikram Patel",
-      email: "vikram.patel@email.com",
-      phone: "+91 98765 43214",
-      address: "654 Koramangala",
-      city: "Bangalore",
-      state: "Karnataka", 
-      pincode: "560034",
-      registrationDate: "2025-05-12",
-      totalBookings: 1,
-      totalSpent: 6000,
-      status: "active",
-      rating: 4.0,
-      lastBooking: "2025-08-01"
-    },
-    {
-      id: "CUST-006",
-      name: "Anita Reddy",
-      email: "anita.reddy@email.com",
-      phone: "+91 98765 43215",
-      address: "987 HSR Layout",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "560102", 
-      registrationDate: "2024-12-20",
-      totalBookings: 0,
-      totalSpent: 0,
-      status: "inactive",
-      rating: 0
+      totalRevenue: 125000,
+      notes: "VIP customer, frequently books wedding decoration packages",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ];
+
+  const handleSearch = async () => {
+    await loadCustomers();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -143,8 +115,10 @@ export default function Customers() {
         return "bg-green-100 text-green-800";
       case "inactive":
         return "bg-gray-100 text-gray-800";
-      case "vip":
+      case "verified":
         return "bg-purple-100 text-purple-800";
+      case "suspended":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -155,21 +129,23 @@ export default function Customers() {
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone.includes(searchTerm) ||
-      customer.id.toLowerCase().includes(searchTerm.toLowerCase());
+      customer.customerCode.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star 
-        key={i}
-        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-      />
-    ));
-  };
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="ml-2">Loading customers...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -207,7 +183,8 @@ export default function Customers() {
               <option value="all">All Customers</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="vip">VIP</option>
+              <option value="verified">Verified</option>
+              <option value="suspended">Suspended</option>
             </select>
           </div>
         </CardContent>
@@ -245,9 +222,9 @@ export default function Customers() {
               <Star className="w-8 h-8 text-purple-600" />
               <div>
                 <p className="text-2xl font-bold text-purple-600">
-                  {customers.filter(c => c.status === "vip").length}
+                  {customers.filter(c => c.status === "verified").length}
                 </p>
-                <p className="text-sm text-muted-foreground">VIP</p>
+                <p className="text-sm text-muted-foreground">Verified</p>
               </div>
             </div>
           </CardContent>
@@ -258,7 +235,7 @@ export default function Customers() {
               <DollarSign className="w-8 h-8 text-yellow-600" />
               <div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  ₹{customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString()}
+                  ₹{customers.reduce((sum, c) => sum + c.totalRevenue, 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
               </div>
@@ -279,7 +256,7 @@ export default function Customers() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">{customer.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{customer.id}</p>
+                    <p className="text-sm text-muted-foreground">{customer.customerCode}</p>
                   </div>
                 </div>
                 <Badge className={getStatusColor(customer.status)}>
@@ -300,7 +277,7 @@ export default function Customers() {
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span>{customer.city}, {customer.state}</span>
+                  <span>{customer.address.city}, {customer.address.state}</span>
                 </div>
               </div>
 
@@ -311,31 +288,18 @@ export default function Customers() {
                   <p className="font-semibold">{customer.totalBookings}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Spent</p>
-                  <p className="font-semibold">₹{customer.totalSpent.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="font-semibold">₹{customer.totalRevenue.toLocaleString()}</p>
                 </div>
               </div>
 
-              {/* Rating */}
-              {customer.rating > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Rating</p>
-                  <div className="flex items-center space-x-1">
-                    {renderStars(customer.rating)}
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {customer.rating.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
               {/* Last Booking */}
-              {customer.lastBooking && (
+              {customer.lastBookingDate && (
                 <div>
                   <p className="text-sm text-muted-foreground">Last Booking</p>
                   <div className="flex items-center space-x-1 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span>{customer.lastBooking}</span>
+                    <span>{new Date(customer.lastBookingDate).toLocaleDateString()}</span>
                   </div>
                 </div>
               )}

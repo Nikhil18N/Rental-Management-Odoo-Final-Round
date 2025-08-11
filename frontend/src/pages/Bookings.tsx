@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -16,121 +17,125 @@ import {
   Truck,
   Clock,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
-
-interface Booking {
-  id: string;
-  customerId: string;
-  customerName: string;
-  customerEmail: string;
-  productId: string;
-  productName: string;
-  startDate: string;
-  endDate: string;
-  duration: string;
-  totalAmount: number;
-  status: "pending" | "confirmed" | "active" | "completed" | "cancelled" | "overdue";
-  paymentStatus: "pending" | "partial" | "paid" | "refunded";
-  createdAt: string;
-  pickupScheduled?: string;
-  returnScheduled?: string;
-}
+import bookingsService, { Booking as ApiBooking } from "@/services/bookingsService";
 
 export default function Bookings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  
-  const bookings: Booking[] = [
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch bookings on component mount
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await bookingsService.getBookings({
+        page: 1,
+        limit: 50,
+        search: searchTerm,
+        status: statusFilter !== "all" ? statusFilter as any : undefined
+      });
+      setBookings(response.data.bookings);
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+      // Fallback to mock data if API fails
+      setBookings(mockBookings);
+      toast({
+        title: "Using Demo Data",
+        description: "Connected to demo data while backend is starting up.",
+        variant: "default",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data as fallback
+  const mockBookings: ApiBooking[] = [
     {
-      id: "BKG-001",
-      customerId: "CUST-001",
-      customerName: "Rajesh Kumar",
-      customerEmail: "rajesh@email.com",
-      productId: "PRD-001",
-      productName: "Professional Camera Kit",
-      startDate: "2025-08-15",
-      endDate: "2025-08-17",
-      duration: "3 days",
+      id: 1,
+      orderNumber: "BKG-001",
+      customerId: 1,
+      customer: {
+        id: 1,
+        name: "Rajesh Kumar",
+        email: "rajesh@email.com",
+        phone: "+91 9876543210"
+      },
+      pickupDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+      returnDate: new Date(Date.now() + 3 * 86400000).toISOString(), // 3 days from now
+      pickupLocation: { address: "Customer Address" },
+      returnLocation: { address: "Customer Address" },
+      deliveryRequired: false,
+      pickupRequired: true,
+      subtotal: 6000,
+      discountAmount: 0,
+      taxAmount: 0,
+      deliveryCharges: 0,
       totalAmount: 6000,
-      status: "confirmed",
-      paymentStatus: "paid",
-      createdAt: "2025-08-10",
-      pickupScheduled: "2025-08-15 09:00",
-      returnScheduled: "2025-08-17 18:00"
-    },
-    {
-      id: "BKG-002",
-      customerId: "CUST-002", 
-      customerName: "Priya Sharma",
-      customerEmail: "priya@email.com",
-      productId: "PRD-002",
-      productName: "Wedding Decoration Set",
-      startDate: "2025-08-20",
-      endDate: "2025-08-22",
-      duration: "3 days",
-      totalAmount: 45000,
-      status: "pending",
+      securityDeposit: 2000,
+      lateFees: 0,
+      damageCharges: 0,
       paymentStatus: "partial",
-      createdAt: "2025-08-09",
+      advancePaid: 2000,
+      balanceAmount: 4000,
+      status: "confirmed",
+      items: [],
+      customerNotes: "Professional photography event",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "BKG-003",
-      customerId: "CUST-003",
-      customerName: "Arjun Singh", 
-      customerEmail: "arjun@email.com",
-      productId: "PRD-003",
-      productName: "Sound System Pro",
-      startDate: "2025-08-12",
-      endDate: "2025-08-14",
-      duration: "3 days",
-      totalAmount: 9000,
-      status: "active",
-      paymentStatus: "paid",
-      createdAt: "2025-08-08",
-      pickupScheduled: "2025-08-12 10:00",
-      returnScheduled: "2025-08-14 16:00"
-    },
-    {
-      id: "BKG-004",
-      customerId: "CUST-004",
-      customerName: "Meera Gupta",
-      customerEmail: "meera@email.com", 
-      productId: "PRD-004",
-      productName: "Party Furniture Set",
-      startDate: "2025-08-08",
-      endDate: "2025-08-10",
-      duration: "3 days",
-      totalAmount: 15000,
-      status: "overdue",
-      paymentStatus: "paid",
-      createdAt: "2025-08-05",
-      pickupScheduled: "2025-08-08 08:00",
-      returnScheduled: "2025-08-10 20:00"
-    },
-    {
-      id: "BKG-005",
-      customerId: "CUST-005",
-      customerName: "Vikram Patel",
-      customerEmail: "vikram@email.com",
-      productId: "PRD-001",
-      productName: "Professional Camera Kit", 
-      startDate: "2025-08-05",
-      endDate: "2025-08-07",
-      duration: "3 days",
-      totalAmount: 6000,
-      status: "completed",
-      paymentStatus: "paid",
-      createdAt: "2025-08-01",
-      pickupScheduled: "2025-08-05 09:00",
-      returnScheduled: "2025-08-07 17:00"
+      id: 2,
+      orderNumber: "BKG-002",
+      customerId: 2,
+      customer: {
+        id: 2,
+        name: "Priya Sharma",
+        email: "priya@email.com",
+        phone: "+91 9876543211"
+      },
+      pickupDate: new Date(Date.now() + 7 * 86400000).toISOString(), // 1 week from now
+      returnDate: new Date(Date.now() + 8 * 86400000).toISOString(), // 8 days from now
+      pickupLocation: { address: "Wedding Venue" },
+      returnLocation: { address: "Wedding Venue" },
+      deliveryRequired: true,
+      pickupRequired: true,
+      subtotal: 15000,
+      discountAmount: 0,
+      taxAmount: 0,
+      deliveryCharges: 500,
+      totalAmount: 15500,
+      securityDeposit: 5000,
+      lateFees: 0,
+      damageCharges: 0,
+      paymentStatus: "pending",
+      advancePaid: 0,
+      balanceAmount: 15500,
+      status: "draft",
+      items: [],
+      customerNotes: "Wedding decoration package",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString()
     }
   ];
 
+  const handleSearch = async () => {
+    await loadBookings();
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
+      case "draft":
+        return "bg-gray-100 text-gray-800";
       case "confirmed":
         return "bg-blue-100 text-blue-800";
       case "active":
@@ -180,14 +185,25 @@ export default function Bookings() {
 
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
-      booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.id.toLowerCase().includes(searchTerm.toLowerCase());
+      booking.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.customer?.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="ml-2">Loading bookings...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -242,7 +258,7 @@ export default function Bookings() {
               <Clock className="w-8 h-8 text-yellow-600" />
               <div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {bookings.filter(b => b.status === "pending").length}
+                  {bookings.filter(b => b.status === "draft").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Pending</p>
               </div>
@@ -317,15 +333,15 @@ export default function Bookings() {
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(booking.status)}
                       <div>
-                        <h3 className="font-semibold">{booking.id}</h3>
-                        <p className="text-sm text-muted-foreground">{booking.customerName}</p>
+                        <h3 className="font-semibold">{booking.orderNumber}</h3>
+                        <p className="text-sm text-muted-foreground">{booking.customer?.name}</p>
                       </div>
                     </div>
                     
                     <div className="hidden md:block">
-                      <p className="font-medium">{booking.productName}</p>
+                      <p className="font-medium">Items: {booking.items.length} products</p>
                       <p className="text-sm text-muted-foreground">
-                        {booking.startDate} to {booking.endDate} ({booking.duration})
+                        {new Date(booking.pickupDate).toLocaleDateString()} to {new Date(booking.returnDate).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -364,18 +380,18 @@ export default function Bookings() {
                 
                 {/* Mobile view additional info */}
                 <div className="md:hidden mt-3 pt-3 border-t border-border">
-                  <p className="font-medium">{booking.productName}</p>
+                  <p className="font-medium">Items: {booking.items.length} products</p>
                   <p className="text-sm text-muted-foreground">
-                    {booking.startDate} to {booking.endDate} ({booking.duration})
+                    {new Date(booking.pickupDate).toLocaleDateString()} to {new Date(booking.returnDate).toLocaleDateString()}
                   </p>
-                  {booking.pickupScheduled && (
+                  {booking.actualPickupDate && (
                     <p className="text-sm text-muted-foreground">
-                      Pickup: {booking.pickupScheduled}
+                      Pickup: {new Date(booking.actualPickupDate).toLocaleDateString()}
                     </p>
                   )}
-                  {booking.returnScheduled && (
+                  {booking.actualReturnDate && (
                     <p className="text-sm text-muted-foreground">
-                      Return: {booking.returnScheduled}
+                      Return: {new Date(booking.actualReturnDate).toLocaleDateString()}
                     </p>
                   )}
                 </div>

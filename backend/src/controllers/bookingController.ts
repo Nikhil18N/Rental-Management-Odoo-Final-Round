@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
-import { BookingOrder } from '../entities/BookingOrder';
+import { BookingOrder, BookingStatus } from '../entities/BookingOrder';
 import { BookingOrderItem } from '../entities/BookingOrderItem';
 import { Product } from '../entities/Product';
 import { User } from '../entities/User';
 import { Quotation } from '../entities/Quotation';
 import { validationResult } from 'express-validator';
-import { BookingStatus } from '../entities/enums';
 
 export class BookingController {
   private bookingRepository: Repository<BookingOrder>;
@@ -193,7 +192,7 @@ export class BookingController {
           orderNumber,
           pickupDate: new Date(rentalStartDate),
           returnDate: new Date(rentalEndDate),
-          status: BookingStatus.PENDING,
+          status: BookingStatus.CONFIRMED,
           customerNotes: notes,
           pickupLocation: deliveryAddress ? { address: deliveryAddress } : { address: pickupAddress },
           returnLocation: { address: pickupAddress || deliveryAddress },
