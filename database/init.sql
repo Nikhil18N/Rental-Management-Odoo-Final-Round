@@ -4,8 +4,21 @@
 -- Create extensions if they don't exist
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Database will be created by Docker, so we just need to ensure it's ready
--- The TypeORM will handle table creation automatically
+-- Ensure the user exists and has proper permissions
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_roles
+      WHERE  rolname = 'rental_user') THEN
 
--- Optional: Create some initial data if needed
--- (TypeORM migrations will handle this, but this ensures DB is ready)
+      CREATE ROLE rental_user LOGIN PASSWORD 'rental_password';
+   END IF;
+END
+$do$;
+
+-- Grant all privileges to rental_user on the database
+GRANT ALL PRIVILEGES ON DATABASE rental_db TO rental_user;
+ALTER USER rental_user CREATEDB;
+
+-- The TypeORM will handle table creation automatically

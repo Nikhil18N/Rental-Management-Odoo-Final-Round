@@ -17,7 +17,6 @@ export default function LoginForm() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('LoginForm: User is authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
   }, [isAuthenticated, user, navigate]);
@@ -27,15 +26,8 @@ export default function LoginForm() {
     setError('');
 
     try {
-      console.log('LoginForm: Starting login process');
       await login(email, password);
-      console.log('LoginForm: Login completed, isAuthenticated:', isAuthenticated, 'user:', user);
-      
-      // Add a small delay to ensure state updates have propagated
-      setTimeout(() => {
-        console.log('LoginForm: Navigating to dashboard after delay');
-        navigate('/dashboard');
-      }, 100);
+      navigate('/dashboard');
     } catch (err) {
       console.error('LoginForm: Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');

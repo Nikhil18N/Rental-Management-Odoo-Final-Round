@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Package, 
   Calendar, 
@@ -41,6 +42,7 @@ const navigation = [
 
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
+  const { user } = useAuth();
   
   return (
     <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200", className)}>
@@ -83,14 +85,22 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="border-t border-gray-200 p-4">
         <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white">AU</span>
+            <span className="text-sm font-medium text-white">
+              {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
+            </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-            <p className="text-xs text-gray-500 truncate">admin@rentease.com</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.name || 'User'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user?.email || 'Not logged in'}
+            </p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+export default Sidebar;

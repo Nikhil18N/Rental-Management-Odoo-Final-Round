@@ -41,7 +41,7 @@ export function Header({ onLogout, user }: HeaderProps) {
     setIsUserMenuOpen(false);
   };
 
-  const currentUser = user || { role: 'customer', email: 'demo@example.com' };
+  const currentUser = user || { role: 'guest', email: 'Not logged in' };
 
   return (
     <header className="h-16 border-b bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">

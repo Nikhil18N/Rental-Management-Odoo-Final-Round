@@ -16,7 +16,7 @@ export default function ProtectedRoute({
   requiredPermission, 
   fallbackPath = '/login' 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, hasRole, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, hasPermission, user } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication

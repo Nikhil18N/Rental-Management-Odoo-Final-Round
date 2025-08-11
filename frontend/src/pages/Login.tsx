@@ -1,58 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Eye, EyeOff, LogIn, Mail, Lock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface LoginPageProps {
-  onLogin: (token: string, user: any) => void;
-}
-
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login, isLoading, isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
-  const testUsers = [
-    { role: 'Admin', email: 'admin@rentease.com', password: 'admin123', color: 'bg-red-100 text-red-800' },
-    { role: 'Manager', email: 'manager@rentease.com', password: 'manager123', color: 'bg-blue-100 text-blue-800' },
-    { role: 'Customer', email: 'customer1@example.com', password: 'customer123', color: 'bg-green-100 text-green-800' }
-  ];
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     try {
-      // For hackathon - simulate API call
-      const user = testUsers.find(u => u.email === email && u.password === password);
-      
-      if (user) {
-        // Simulate successful login
-        const mockToken = `hackathon_token_${Date.now()}`;
-        localStorage.setItem('auth_token', mockToken);
-        localStorage.setItem('user_data', JSON.stringify(user));
-        onLogin(mockToken, user);
-      } else {
-        setError('Invalid credentials. Use test credentials below.');
-      }
+      await login(email, password);
+      navigate('/dashboard');
     } catch (err) {
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     }
   };
 
-  const quickLogin = (user: any) => {
-    setEmail(user.email);
-    setPassword(user.password);
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -120,40 +103,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={loading}
+                disabled={isLoading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Test Credentials Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">🚀 Hackathon Test Credentials</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {testUsers.map((user, index) => (
-              <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <Badge className={user.color}>
-                    {user.role}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => quickLogin(user)}
-                  >
-                    Quick Login
-                  </Button>
-                </div>
-                <div className="space-y-1 text-sm">
-                  <div className="font-mono text-xs">{user.email}</div>
-                  <div className="font-mono text-xs text-gray-500">{user.password}</div>
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
       </div>
