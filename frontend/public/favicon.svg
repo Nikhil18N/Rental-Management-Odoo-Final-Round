@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#1e40af"/>
+  
+  <!-- House/Building shape -->
+  <path d="M8 14L16 8L24 14V24H20V18H12V24H8V14Z" fill="white"/>
+  
+  <!-- Key symbol -->
+  <circle cx="10" cy="16" r="1.5" fill="#1e40af"/>
+  <rect x="11.5" y="15.5" width="4" height="1" fill="#1e40af"/>
+  <rect x="14.5" y="14.5" width="1" height="1" fill="#1e40af"/>
+  <rect x="14.5" y="16.5" width="1" height="1" fill="#1e40af"/>
+</svg>
