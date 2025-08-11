@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocation, useNavigate } from "react-router-dom";
 import { 
   Package, 
   Calendar, 
@@ -18,19 +19,22 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: "Dashboard", icon: Home, current: true },
-  { name: "Products", icon: Package, current: false },
-  { name: "Bookings", icon: Calendar, current: false },
-  { name: "Customers", icon: Users, current: false },
-  { name: "Orders", icon: FileText, current: false },
-  { name: "Deliveries", icon: Truck, current: false },
-  { name: "Payments", icon: CreditCard, current: false },
-  { name: "Reports", icon: BarChart3, current: false },
-  { name: "Notifications", icon: Bell, current: false },
-  { name: "Settings", icon: Settings, current: false },
+  { name: "Dashboard", icon: Home, href: "/" },
+  { name: "Products", icon: Package, href: "/products" },
+  { name: "Bookings", icon: Calendar, href: "/bookings" },
+  { name: "Customers", icon: Users, href: "/customers" },
+  { name: "Orders", icon: FileText, href: "/orders" },
+  { name: "Deliveries", icon: Truck, href: "/deliveries" },
+  { name: "Payments", icon: CreditCard, href: "/payments" },
+  { name: "Reports", icon: BarChart3, href: "/reports" },
+  { name: "Notifications", icon: Bell, href: "/notifications" },
+  { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   return (
     <div className={cn("flex h-full w-64 flex-col bg-card border-r border-border", className)}>
       {/* Logo */}
@@ -47,16 +51,18 @@ export function Sidebar({ className }: SidebarProps) {
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
           const Icon = item.icon;
+          const isActive = location.pathname === item.href;
           return (
             <Button
               key={item.name}
-              variant={item.current ? "default" : "ghost"}
+              variant={isActive ? "default" : "ghost"}
               className={cn(
                 "w-full justify-start h-10 px-3",
-                item.current 
+                isActive 
                   ? "bg-gradient-primary text-primary-foreground shadow-soft" 
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
+              onClick={() => navigate(item.href)}
             >
               <Icon className="w-4 h-4 mr-3" />
               {item.name}
