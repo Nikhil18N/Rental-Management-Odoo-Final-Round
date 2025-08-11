@@ -20,9 +20,9 @@ class JwtUtils {
   private readonly refreshExpiresIn: string;
 
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+    this.jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-key-for-development';
     this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
-    this.refreshSecret = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
+    this.refreshSecret = process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-key-for-development';
     this.refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
   }
 
@@ -41,7 +41,7 @@ class JwtUtils {
       expiresIn: this.jwtExpiresIn,
       issuer: 'rental-management-system',
       audience: 'rental-management-users'
-    });
+    } as jwt.SignOptions);
   }
 
   /**
@@ -58,7 +58,7 @@ class JwtUtils {
       expiresIn: this.refreshExpiresIn,
       issuer: 'rental-management-system',
       audience: 'rental-management-users'
-    });
+    } as jwt.SignOptions);
   }
 
   /**

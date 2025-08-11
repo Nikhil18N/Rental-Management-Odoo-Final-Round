@@ -74,13 +74,7 @@ const UserSchema = new Schema<IUser>({
   },
   phone: {
     type: String,
-    trim: true,
-    validate: {
-      validator: function(v: string) {
-        return !v || validator.isMobilePhone(v, 'any');
-      },
-      message: 'Please provide a valid phone number'
-    }
+    trim: true
   },
   avatar: {
     type: String,
@@ -148,7 +142,7 @@ const UserSchema = new Schema<IUser>({
 }, {
   timestamps: true,
   toJSON: {
-    transform: function(doc, ret) {
+    transform: function(doc: any, ret: any) {
       delete ret.password;
       delete ret.passwordResetToken;
       delete ret.passwordResetExpires;
@@ -160,8 +154,7 @@ const UserSchema = new Schema<IUser>({
   }
 });
 
-// Indexes for performance
-UserSchema.index({ email: 1 }, { unique: true });
+// Indexes for performance (email index is already created via unique: true)
 UserSchema.index({ role: 1 });
 UserSchema.index({ isActive: 1 });
 UserSchema.index({ companyId: 1 });
@@ -174,7 +167,7 @@ UserSchema.pre('save', async function(next) {
   try {
     // Hash password with salt rounds from environment
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
-    this.password = await bcrypt.hash(this.password, saltRounds);
+    (this as any).password = await bcrypt.hash((this as any).password, saltRounds);
     next();
   } catch (error) {
     next(error as Error);
@@ -184,18 +177,18 @@ UserSchema.pre('save', async function(next) {
 // Pre-save middleware to set default permissions based on role
 UserSchema.pre('save', function(next) {
   if (this.isModified('role') || this.isNew) {
-    switch (this.role) {
+    switch ((this as any).role) {
       case 'admin':
-        this.permissions = ['read_all', 'write_all', 'delete_all', 'manage_users', 'view_reports', 'manage_settings'];
+        (this as any).permissions = ['read_all', 'write_all', 'delete_all', 'manage_users', 'view_reports', 'manage_settings'];
         break;
       case 'manager':
-        this.permissions = ['read_rentals', 'write_rentals', 'manage_customers', 'view_reports'];
+        (this as any).permissions = ['read_rentals', 'write_rentals', 'manage_customers', 'view_reports'];
         break;
       case 'customer':
-        this.permissions = ['read_own', 'write_own'];
+        (this as any).permissions = ['read_own', 'write_own'];
         break;
       default:
-        this.permissions = ['read_own', 'write_own'];
+        (this as any).permissions = ['read_own', 'write_own'];
     }
   }
   next();
