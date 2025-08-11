@@ -9,7 +9,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 
 // Import existing pages
-import Index from "./pages/Index";
+import Index from "./pages/Index.tsx";
 import Products from "./pages/Products";
 import Bookings from "./pages/Bookings";
 import Customers from "./pages/Customers";
