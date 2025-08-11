@@ -25,7 +25,7 @@ const seedDatabase = async () => {
       email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@rentease.com',
       password: process.env.DEFAULT_ADMIN_PASSWORD || 'admin123',
       role: 'admin',
-      phone: '+91 98765 43210',
+      phone: '+919876543210',
       isEmailVerified: true,
       isActive: true,
       address: {
@@ -51,7 +51,7 @@ const seedDatabase = async () => {
       email: 'manager@rentease.com',
       password: 'manager123',
       role: 'manager',
-      phone: '+91 98765 43211',
+      phone: '+919876543211',
       isEmailVerified: true,
       isActive: true,
       address: {
@@ -70,7 +70,7 @@ const seedDatabase = async () => {
       email: 'customer@example.com',
       password: 'customer123',
       role: 'customer',
-      phone: '+91 98765 43212',
+      phone: '+919876543212',
       isEmailVerified: true,
       isActive: true,
       address: {

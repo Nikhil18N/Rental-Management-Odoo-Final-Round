@@ -1,8 +1,41 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Bell, Search, Plus, User, Settings, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Bell, 
+  Search, 
+  Plus, 
+  User, 
+  Settings, 
+  LogOut, 
+  ChevronDown,
+  Shield,
+  UserCircle
+} from "lucide-react";
 
 export function Header() {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout, hasRole } = useAuth();
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800';
+      case 'manager':
+        return 'bg-blue-100 text-blue-800';
+      case 'customer':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+  };
+
   return (
     <header className="h-16 border-b bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">
       <div className="flex h-full items-center justify-between px-6">
@@ -44,14 +77,74 @@ export function Header() {
             </Button>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
-              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600" />
-              </div>
-              <div className="hidden lg:block">
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@rentease.com</p>
-              </div>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-3 pl-3 border-l border-gray-200 hover:bg-gray-50"
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="hidden lg:block text-left">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </Button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{user?.name}</p>
+                        <p className="text-sm text-gray-500">{user?.email}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge className={getRoleColor(user?.role || '')}>
+                            {user?.role}
+                          </Badge>
+                          {hasRole('admin') && (
+                            <Shield className="w-3 h-3 text-red-600" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-2">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-left"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <UserCircle className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-left"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Button>
+                    <div className="border-t border-gray-100 my-2"></div>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

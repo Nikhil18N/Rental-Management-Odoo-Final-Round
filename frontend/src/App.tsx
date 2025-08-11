@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import LoginForm from "@/components/auth/LoginForm";
+import RegisterForm from "@/components/auth/RegisterForm";
+
+// Import existing pages
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Bookings from "./pages/Bookings";
@@ -25,30 +31,131 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/quotations" element={<Quotations />} />
-          <Route path="/bookings" element={<Bookings />} />
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/delivery" element={<DeliveryManagement />} />
-          <Route path="/invoicing" element={<Invoicing />} />
-          <Route path="/pricelists" element={<Pricelists />} />
-          <Route path="/returns" element={<ReturnsDelays />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/products" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <Products />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/quotations" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <Quotations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bookings" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <Bookings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customers" 
+              element={
+                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                  <Customers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/delivery" 
+              element={
+                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                  <DeliveryManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/invoicing" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <Invoicing />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/pricelists" 
+              element={
+                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                  <Pricelists />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/returns" 
+              element={
+                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                  <ReturnsDelays />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payments" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <Payments />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports" 
+              element={
+                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                  <Reports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
