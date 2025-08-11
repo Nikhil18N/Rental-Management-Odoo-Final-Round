@@ -1,0 +1,383 @@
+import { Request, Response } from 'express';
+import { Repository, DataSource } from 'typeorm';
+import { User } from '../entities/User';
+import { Product } from '../entities/Product';
+import { BookingOrder } from '../entities/BookingOrder';
+import { Invoice } from '../entities/Invoice';
+import { Payment } from '../entities/Payment';
+
+export class DashboardController {
+  private userRepository: Repository<User>;
+  private productRepository: Repository<Product>;
+  private bookingRepository: Repository<BookingOrder>;
+  private invoiceRepository: Repository<Invoice>;
+  private paymentRepository: Repository<Payment>;
+
+  constructor(dataSource: DataSource) {
+    this.userRepository = dataSource.getRepository(User);
+    this.productRepository = dataSource.getRepository(Product);
+    this.bookingRepository = dataSource.getRepository(BookingOrder);
+    this.invoiceRepository = dataSource.getRepository(Invoice);
+    this.paymentRepository = dataSource.getRepository(Payment);
+  }
+
+  // Get dashboard statistics
+  async getDashboardStats(req: Request, res: Response): Promise<void> {
+    try {
+      const { period = '30' } = req.query; // days
+      const periodDays = parseInt(period as string);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - periodDays);
+
+      // Get current period stats
+      const [
+        totalRevenue,
+        activeRentals,
+        totalCustomers,
+        pendingReturns,
+        revenueComparison,
+        customerGrowth,
+        popularProducts
+      ] = await Promise.all([
+        this.getTotalRevenue(startDate),
+        this.getActiveRentals(),
+        this.getTotalCustomers(),
+        this.getPendingReturns(),
+        this.getRevenueComparison(periodDays),
+        this.getCustomerGrowth(periodDays),
+        this.getPopularProducts(startDate)
+      ]);
+
+      const stats = {
+        totalRevenue: {
+          value: totalRevenue.total,
+          change: revenueComparison.changePercent,
+          changeText: `from last ${periodDays} days`,
+          changeType: revenueComparison.changePercent >= 0 ? 'positive' : 'negative'
+        },
+        activeRentals: {
+          value: activeRentals.count,
+          change: `+${activeRentals.newToday}`,
+          changeText: 'from yesterday',
+          changeType: activeRentals.newToday >= 0 ? 'positive' : 'negative'
+        },
+        totalCustomers: {
+          value: totalCustomers.count,
+          change: `+${customerGrowth.changePercent}%`,
+          changeText: `from last ${periodDays} days`,
+          changeType: customerGrowth.changePercent >= 0 ? 'positive' : 'negative'
+        },
+        pendingReturns: {
+          value: pendingReturns.count,
+          change: `${pendingReturns.overdue} overdue`,
+          changeText: 'requires attention',
+          changeType: pendingReturns.overdue > 0 ? 'negative' : 'positive'
+        }
+      };
+
+      res.json({
+        success: true,
+        data: {
+          stats,
+          popularProducts,
+          revenueChart: revenueComparison.chartData
+        }
+      });
+    } catch (error) {
+      console.error('Get dashboard stats error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch dashboard statistics'
+      });
+    }
+  }
+
+  // Get recent bookings/rentals
+  async getRecentBookings(req: Request, res: Response): Promise<void> {
+    try {
+      const { limit = 10 } = req.query;
+
+      const recentBookings = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.customer', 'customer')
+        .leftJoinAndSelect('booking.items', 'items')
+        .leftJoinAndSelect('items.product', 'product')
+        .orderBy('booking.createdAt', 'DESC')
+        .limit(parseInt(limit as string))
+        .getMany();
+
+      const formattedBookings = recentBookings.map(booking => ({
+        id: booking.id,
+        customer: booking.customer?.name || 'Unknown',
+        product: booking.items?.[0]?.product?.name || 'Multiple Items',
+        amount: `₹${booking.totalAmount.toLocaleString()}`,
+        status: booking.status,
+        date: booking.createdAt.toISOString().split('T')[0],
+        createdAt: booking.createdAt
+      }));
+
+      res.json({
+        success: true,
+        data: formattedBookings
+      });
+    } catch (error) {
+      console.error('Get recent bookings error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch recent bookings'
+      });
+    }
+  }
+
+  // Get recent activities
+  async getRecentActivities(req: Request, res: Response): Promise<void> {
+    try {
+      const { limit = 10 } = req.query;
+
+      // Get recent payments
+      const recentPayments = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.invoice', 'invoice')
+        .leftJoinAndSelect('invoice.bookingOrder', 'booking')
+        .leftJoinAndSelect('booking.customer', 'customer')
+        .where('payment.status = :status', { status: 'completed' })
+        .orderBy('payment.createdAt', 'DESC')
+        .limit(parseInt(limit as string) / 2)
+        .getMany();
+
+      // Get recent bookings
+      const recentBookings = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.customer', 'customer')
+        .leftJoinAndSelect('booking.items', 'items')
+        .leftJoinAndSelect('items.product', 'product')
+        .orderBy('booking.createdAt', 'DESC')
+        .limit(parseInt(limit as string) / 2)
+        .getMany();
+
+      const activities: Array<{
+        type: string;
+        message: string;
+        details: string;
+        timestamp: Date;
+        color: string;
+      }> = [];
+
+      // Add payment activities
+      recentPayments.forEach(payment => {
+        activities.push({
+          type: 'payment',
+          message: `Payment received from ${payment.invoice?.bookingOrder?.customer?.name || 'Customer'}`,
+          details: `₹${payment.amount.toLocaleString()} for rental`,
+          timestamp: payment.createdAt,
+          color: 'green'
+        });
+      });
+
+      // Add booking activities
+      recentBookings.forEach(booking => {
+        activities.push({
+          type: 'booking',
+          message: `New booking created`,
+          details: `${booking.items?.[0]?.product?.name || 'Product'} for ${booking.customer?.name || 'Customer'}`,
+          timestamp: booking.createdAt,
+          color: 'blue'
+        });
+      });
+
+      // Sort by timestamp and limit
+      const sortedActivities = activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, parseInt(limit as string))
+        .map(activity => ({
+          ...activity,
+          timeAgo: this.getTimeAgo(activity.timestamp)
+        }));
+
+      res.json({
+        success: true,
+        data: sortedActivities
+      });
+    } catch (error) {
+      console.error('Get recent activities error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch recent activities'
+      });
+    }
+  }
+
+  // Helper methods
+  private async getTotalRevenue(startDate: Date) {
+    const result = await this.paymentRepository
+      .createQueryBuilder('payment')
+      .select('SUM(payment.amount)', 'total')
+      .where('payment.status = :status', { status: 'completed' })
+      .andWhere('payment.createdAt >= :startDate', { startDate })
+      .getRawOne();
+
+    return {
+      total: parseFloat(result.total) || 0
+    };
+  }
+
+  private async getActiveRentals() {
+    const activeCount = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.status IN (:...statuses)', { statuses: ['confirmed', 'active'] })
+      .getCount();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const newToday = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.createdAt >= :today', { today })
+      .getCount();
+
+    return {
+      count: activeCount,
+      newToday
+    };
+  }
+
+  private async getTotalCustomers() {
+    const count = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: 'customer' })
+      .getCount();
+
+    return { count };
+  }
+
+  private async getPendingReturns() {
+    const now = new Date();
+    
+    const pendingReturns = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.status = :status', { status: 'active' })
+      .andWhere('booking.endDateTime < :now', { now })
+      .getCount();
+
+    const overdue = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.status = :status', { status: 'active' })
+      .andWhere('booking.endDateTime < :cutoff', { 
+        cutoff: new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 hours ago
+      })
+      .getCount();
+
+    return {
+      count: pendingReturns,
+      overdue
+    };
+  }
+
+  private async getRevenueComparison(periodDays: number) {
+    const currentPeriodStart = new Date();
+    currentPeriodStart.setDate(currentPeriodStart.getDate() - periodDays);
+
+    const previousPeriodStart = new Date();
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - (periodDays * 2));
+
+    const currentRevenue = await this.getTotalRevenue(currentPeriodStart);
+    const previousRevenue = await this.getTotalRevenue(previousPeriodStart);
+
+    const changePercent = previousRevenue.total > 0 
+      ? ((currentRevenue.total - previousRevenue.total) / previousRevenue.total) * 100
+      : 0;
+
+    // Generate chart data for the last 7 days
+    const chartData: Array<{
+      date: string;
+      revenue: number;
+    }> = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const dayRevenue = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .select('SUM(payment.amount)', 'total')
+        .where('payment.status = :status', { status: 'completed' })
+        .andWhere('payment.createdAt >= :startDate', { startDate: date })
+        .andWhere('payment.createdAt < :endDate', { endDate: nextDate })
+        .getRawOne();
+
+      chartData.push({
+        date: date.toISOString().split('T')[0],
+        revenue: parseFloat(dayRevenue.total) || 0
+      });
+    }
+
+    return {
+      changePercent: Math.round(changePercent * 100) / 100,
+      chartData
+    };
+  }
+
+  private async getCustomerGrowth(periodDays: number) {
+    const currentPeriodStart = new Date();
+    currentPeriodStart.setDate(currentPeriodStart.getDate() - periodDays);
+
+    const previousPeriodStart = new Date();
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - (periodDays * 2));
+
+    const currentCustomers = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: 'customer' })
+      .andWhere('user.createdAt >= :startDate', { startDate: currentPeriodStart })
+      .getCount();
+
+    const previousCustomers = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: 'customer' })
+      .andWhere('user.createdAt >= :startDate', { startDate: previousPeriodStart })
+      .andWhere('user.createdAt < :endDate', { endDate: currentPeriodStart })
+      .getCount();
+
+    const changePercent = previousCustomers > 0 
+      ? ((currentCustomers - previousCustomers) / previousCustomers) * 100
+      : 0;
+
+    return {
+      changePercent: Math.round(changePercent * 100) / 100
+    };
+  }
+
+  private async getPopularProducts(startDate: Date) {
+    const popularProducts = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .leftJoin('booking.items', 'item')
+      .leftJoin('item.product', 'product')
+      .select('product.name', 'productName')
+      .addSelect('COUNT(item.id)', 'bookingCount')
+      .addSelect('SUM(item.totalPrice)', 'totalRevenue')
+      .where('booking.createdAt >= :startDate', { startDate })
+      .groupBy('product.id, product.name')
+      .orderBy('bookingCount', 'DESC')
+      .limit(5)
+      .getRawMany();
+
+    return popularProducts.map(product => ({
+      name: product.productName,
+      bookings: parseInt(product.bookingCount),
+      revenue: parseFloat(product.totalRevenue) || 0
+    }));
+  }
+
+  private getTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  }
+}

@@ -3,9 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -27,36 +26,6 @@ export default function LoginForm() {
     }
   };
 
-  const demoAccounts = [
-    { 
-      role: 'Admin', 
-      email: 'admin@rentease.com', 
-      password: 'admin123', 
-      color: 'bg-red-100 text-red-800',
-      description: 'Full system access'
-    },
-    { 
-      role: 'Manager', 
-      email: 'manager@rentease.com', 
-      password: 'manager123', 
-      color: 'bg-blue-100 text-blue-800',
-      description: 'Rental & customer management'
-    },
-    { 
-      role: 'Customer', 
-      email: 'customer@example.com', 
-      password: 'customer123', 
-      color: 'bg-green-100 text-green-800',
-      description: 'Own data access only'
-    }
-  ];
-
-  const fillDemoCredentials = (email: string, password: string) => {
-    setEmail(email);
-    setPassword(password);
-    setError(''); // Clear any existing errors
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-100 p-4">
       <div className="w-full max-w-md space-y-6">
@@ -70,35 +39,6 @@ export default function LoginForm() {
           </h1>
           <p className="text-gray-600 mt-2">Rental Management System</p>
         </div>
-
-        {/* Demo Accounts */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-sm font-medium text-gray-700">
-              🧪 Demo Accounts - Click to Use
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {demoAccounts.map((account) => (
-              <div
-                key={account.role}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all duration-200 group"
-                onClick={() => fillDemoCredentials(account.email, account.password)}
-              >
-                <div className="flex items-center space-x-3">
-                  <Badge className={`${account.color} font-medium`}>
-                    {account.role}
-                  </Badge>
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">{account.email}</span>
-                    <p className="text-xs text-gray-500">{account.description}</p>
-                  </div>
-                </div>
-                <CheckCircle className="w-4 h-4 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
 
         {/* Login Form */}
         <Card className="border border-gray-200 shadow-lg">

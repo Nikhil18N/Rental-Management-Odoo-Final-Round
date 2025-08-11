@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,87 +14,138 @@ import {
   TrendingUp,
   TrendingDown,
   Plus,
-  MoreHorizontal
+  MoreHorizontal,
+  RefreshCw
 } from "lucide-react";
+import dashboardService, { 
+  DashboardStats, 
+  RecentBooking, 
+  RecentActivity,
+  DashboardData 
+} from "@/services/dashboardService";
+import { useToast } from "@/hooks/use-toast";
 
 export function DashboardContent() {
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "₹2,45,890",
-      change: "+12.5%",
-      changeText: "from last month",
-      changeType: "positive" as const,
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-    {
-      title: "Active Rentals",
-      value: "347",
-      change: "+23",
-      changeText: "from yesterday",
-      changeType: "positive" as const,
-      icon: Package,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      title: "Total Customers",
-      value: "1,249",
-      change: "+18.2%",
-      changeText: "from last month",
-      changeType: "positive" as const,
-      icon: Users,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
-    {
-      title: "Pending Returns",
-      value: "12",
-      change: "3 overdue",
-      changeText: "requires attention",
-      changeType: "negative" as const,
-      icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { toast } = useToast();
 
-  const recentOrders = [
-    { 
-      id: "RNT-001", 
-      customer: "Rajesh Kumar", 
-      product: "Professional Camera Kit",
-      amount: "₹15,000",
-      status: "active",
-      date: "2025-08-10"
-    },
-    { 
-      id: "RNT-002", 
-      customer: "Priya Sharma", 
-      product: "Wedding Decoration Set",
-      amount: "₹12,500",
-      status: "pending",
-      date: "2025-08-11"
-    },
-    { 
-      id: "RNT-003", 
-      customer: "Arjun Singh", 
-      product: "Sound System Pro",
-      amount: "₹8,000",
-      status: "overdue",
-      date: "2025-08-09"
-    },
-    { 
-      id: "RNT-004", 
-      customer: "Meera Gupta", 
-      product: "Furniture Set Deluxe",
-      amount: "₹22,000",
-      status: "completed",
-      date: "2025-08-08"
-    },
-  ];
+  // Load dashboard data
+  const loadDashboardData = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      setRefreshing(true);
+
+      const [statsData, bookingsData, activitiesData] = await Promise.all([
+        dashboardService.getDashboardStats(),
+        dashboardService.getRecentBookings(),
+        dashboardService.getRecentActivities()
+      ]);
+
+      setStats(statsData.stats);
+      setRecentBookings(bookingsData);
+      setRecentActivities(activitiesData);
+      setLastUpdated(new Date());
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [toast]);
+
+  // Set up real-time polling
+  useEffect(() => {
+    let pollingInterval: NodeJS.Timeout;
+
+    const startPolling = () => {
+      pollingInterval = dashboardService.startPolling(
+        (data) => {
+          setStats(data.stats.stats);
+          setRecentBookings(data.bookings);
+          setRecentActivities(data.activities);
+          setLastUpdated(new Date());
+        },
+        30000 // Poll every 30 seconds
+      );
+    };
+
+    // Initial load
+    loadDashboardData();
+
+    // Start polling after initial load
+    const pollTimeout = setTimeout(startPolling, 1000);
+
+    return () => {
+      if (pollingInterval) {
+        dashboardService.stopPolling(pollingInterval);
+      }
+      clearTimeout(pollTimeout);
+    };
+  }, [loadDashboardData]);
+
+  // Manual refresh
+  const handleRefresh = () => {
+    loadDashboardData(false);
+  };
+
+  // Format stats for display
+  const formatStatsForDisplay = () => {
+    if (!stats) return [];
+
+    return [
+      {
+        title: "Total Revenue",
+        value: `₹${stats.totalRevenue.value.toLocaleString()}`,
+        change: stats.totalRevenue.change,
+        changeText: stats.totalRevenue.changeText,
+        changeType: stats.totalRevenue.changeType,
+        icon: DollarSign,
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+      },
+      {
+        title: "Active Rentals",
+        value: stats.activeRentals.value.toString(),
+        change: stats.activeRentals.change,
+        changeText: stats.activeRentals.changeText,
+        changeType: stats.activeRentals.changeType,
+        icon: Package,
+        color: "text-blue-600",
+        bgColor: "bg-blue-50",
+      },
+      {
+        title: "Total Customers",
+        value: stats.totalCustomers.value.toString(),
+        change: stats.totalCustomers.change,
+        changeText: stats.totalCustomers.changeText,
+        changeType: stats.totalCustomers.changeType,
+        icon: Users,
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+      },
+      {
+        title: "Pending Returns",
+        value: stats.pendingReturns.value.toString(),
+        change: stats.pendingReturns.change,
+        changeText: stats.pendingReturns.changeText,
+        changeType: stats.pendingReturns.changeType,
+        icon: Clock,
+        color: "text-orange-600",
+        bgColor: "bg-orange-50",
+      },
+    ];
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -115,23 +167,62 @@ export function DashboardContent() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3 mt-6">
+            <div className="lg:col-span-2 h-96 bg-gray-200 rounded"></div>
+            <div className="h-96 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayStats = formatStatsForDisplay();
+
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your rental business.</p>
+          <div className="flex items-center space-x-4">
+            <p className="text-gray-600">Welcome back! Here's what's happening with your rental business.</p>
+            {lastUpdated && (
+              <span className="text-sm text-gray-500">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Quick Action
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Quick Action
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
+        {displayStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
@@ -177,31 +268,38 @@ export function DashboardContent() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-0">
-              {recentOrders.map((order, index) => {
-                const StatusIcon = getStatusIcon(order.status);
-                return (
-                  <div key={order.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <Package className="w-5 h-5 text-blue-600" />
+              {recentBookings.length > 0 ? (
+                recentBookings.map((order, index) => {
+                  const StatusIcon = getStatusIcon(order.status);
+                  return (
+                    <div key={order.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                          <Package className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{order.id}</p>
+                          <p className="text-sm text-gray-600">{order.customer}</p>
+                          <p className="text-sm text-gray-500">{order.product}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{order.id}</p>
-                        <p className="text-sm text-gray-600">{order.customer}</p>
-                        <p className="text-sm text-gray-500">{order.product}</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{order.amount}</p>
+                        <Badge className={getStatusColor(order.status)}>
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {order.status}
+                        </Badge>
+                        <p className="text-xs text-gray-500 mt-1">{order.date}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">{order.amount}</p>
-                      <Badge className={getStatusColor(order.status)}>
-                        <StatusIcon className="w-3 h-3 mr-1" />
-                        {order.status}
-                      </Badge>
-                      <p className="text-xs text-gray-500 mt-1">{order.date}</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-gray-500">
+                  <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No recent bookings found</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -239,30 +337,30 @@ export function DashboardContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Payment received from Rajesh Kumar</p>
-                <p className="text-xs text-gray-500">₹15,000 for Camera Kit rental - 2 minutes ago</p>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-start space-x-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                    activity.color === 'green' ? 'bg-green-500' :
+                    activity.color === 'blue' ? 'bg-blue-500' :
+                    activity.color === 'orange' ? 'bg-orange-500' :
+                    'bg-gray-500'
+                  }`}></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                    <p className="text-xs text-gray-500">{activity.details} - {activity.timeAgo}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No recent activities</p>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">New booking created</p>
-                <p className="text-xs text-gray-500">Wedding Decoration Set for Priya Sharma - 5 minutes ago</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Return overdue</p>
-                <p className="text-xs text-gray-500">Sound System Pro from Arjun Singh - 1 hour ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
   );
-};
+}
