@@ -15,8 +15,11 @@ export class AuthController {
 
   async register(req: Request, res: Response): Promise<void> {
     try {
+      console.log('Register request body:', req.body);
+      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         res.status(400).json({
           success: false,
           message: 'Validation errors',
@@ -38,22 +41,29 @@ export class AuthController {
       }
 
       // Create user
+      console.log('Creating user with data:', { name, email, phone, role });
+      console.log('Password received:', password ? 'YES' : 'NO');
       const user = this.userRepository.create({
         name,
         email,
-        password,
         phone,
         role: role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.CUSTOMER
       });
 
+      // Set password manually (virtual field)
+      user.password = password;
+      console.log('User entity created with password field:', user.password ? 'YES' : 'NO');
+      console.log('User created, saving to database...');
       await this.userRepository.save(user);
+      console.log('User saved with ID:', user.id);
 
       // Generate tokens
+      console.log('Generating tokens for user:', user.id);
       const { accessToken, refreshToken } = jwtUtils.generateTokenPair({
         userId: user.id.toString(),
         email: user.email,
         role: user.role,
-        permissions: user.permissions
+        permissions: user.permissions || []
       });
 
       // Remove sensitive data
@@ -84,8 +94,11 @@ export class AuthController {
 
   async login(req: Request, res: Response): Promise<void> {
     try {
+      console.log('Login request body:', req.body);
+      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Login validation errors:', errors.array());
         res.status(400).json({
           success: false,
           message: 'Validation errors',
