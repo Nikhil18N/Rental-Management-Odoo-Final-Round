@@ -7,6 +7,10 @@ import rateLimit from 'express-rate-limit';
 import { initializeDatabase } from './config/database';
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboardRoutes';
+import productRoutes from './routes/productRoutes';
+import bookingRoutes from './routes/bookingRoutes';
+import quotationRoutes from './routes/quotationRoutes';
+import customerRoutes from './routes/customerRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -119,6 +123,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/quotations', quotationRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

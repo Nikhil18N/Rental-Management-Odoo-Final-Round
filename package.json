@@ -29,5 +29,8 @@
     "vite"
   ],
   "author": "Nikhil",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }

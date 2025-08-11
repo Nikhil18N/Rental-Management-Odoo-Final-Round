@@ -22,6 +22,7 @@ import {
 
 interface SidebarProps {
   className?: string;
+  onClose?: () => void;
 }
 
 const navigation = [
@@ -40,12 +41,18 @@ const navigation = [
   { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onClose }: SidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
+
+  const handleNavClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
   
   return (
-    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200", className)}>
+    <div className={cn("flex h-full w-64 flex-col bg-white border-r border-gray-200 shadow-lg", className)}>
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -63,7 +70,7 @@ export function Sidebar({ className }: SidebarProps) {
           const isActive = location.pathname === item.href;
           
           return (
-            <Link key={item.name} to={item.href}>
+            <Link key={item.name} to={item.href} onClick={handleNavClick}>
               <Button
                 variant="ghost"
                 className={cn(
