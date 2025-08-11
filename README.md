@@ -29,14 +29,19 @@ A comprehensive rental management application built with modern web technologies
    cd Rental-Management-Odoo-Final-Round
    ```
 
-3. **Install dependencies**
+3. **Install dependencies for all packages**
    ```bash
-   npm install
+   npm run install:all
    ```
 
-4. **Start the development server**
+4. **Start the development servers**
    ```bash
+   # Start both frontend and backend simultaneously
    npm run dev
+   
+   # Or start them separately:
+   npm run dev:frontend  # Frontend only (port 5173)
+   npm run dev:backend   # Backend only (port 3000)
    ```
 
 5. **Open your browser** and visit `http://localhost:5173`
@@ -56,28 +61,49 @@ This project is built with modern technologies:
 ## 📁 Project Structure
 
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── ui/             # shadcn/ui components
-│   ├── Header.tsx      # Application header
-│   ├── Sidebar.tsx     # Navigation sidebar
-│   └── Layout.tsx      # Main layout wrapper
-├── pages/              # Page components
-│   ├── Index.tsx       # Dashboard/Home page
-│   ├── Products.tsx    # Property management
-│   ├── Bookings.tsx    # Booking management
-│   └── Customers.tsx   # Customer management
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions
-└── types/              # TypeScript type definitions
+├── frontend/               # React + TypeScript frontend
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── ui/         # shadcn/ui components
+│   │   │   ├── Header.tsx  # Application header
+│   │   │   ├── Sidebar.tsx # Navigation sidebar
+│   │   │   └── Layout.tsx  # Main layout wrapper
+│   │   ├── pages/          # Page components
+│   │   │   ├── Index.tsx   # Dashboard/Home page
+│   │   │   ├── Products.tsx# Property management
+│   │   │   ├── Bookings.tsx# Booking management
+│   │   │   └── Customers.tsx# Customer management
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utility functions
+│   │   └── types/          # TypeScript type definitions
+│   ├── public/             # Static assets
+│   ├── package.json        # Frontend dependencies
+│   └── vite.config.ts      # Vite configuration
+├── backend/                # Backend API server
+│   ├── backend-example.ts  # Backend implementation example
+│   └── package.json        # Backend dependencies
+├── package.json            # Root package.json (monorepo)
+└── README.md              # Project documentation
 ```
 
 ## 🎯 Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
+### Root Level (Monorepo)
+- `npm run dev` - Start both frontend and backend concurrently
+- `npm run dev:frontend` - Start only the frontend development server
+- `npm run dev:backend` - Start only the backend development server
+- `npm run build` - Build both frontend and backend for production
+- `npm run install:all` - Install dependencies for all packages
+
+### Frontend (./frontend/)
+- `npm run dev` - Start frontend development server (Vite)
+- `npm run build` - Build frontend for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+
+### Backend (./backend/)
+- `npm run dev` - Start backend development server
+- `npm run build` - Build backend for production
 
 ## 🚀 Deployment
 
