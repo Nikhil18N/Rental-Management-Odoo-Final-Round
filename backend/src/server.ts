@@ -11,6 +11,7 @@ import productRoutes from './routes/productRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import quotationRoutes from './routes/quotationRoutes';
 import customerRoutes from './routes/customerRoutes';
+import publicRoutes from './routes/publicRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -131,6 +132,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/quotations', quotationRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/public', publicRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

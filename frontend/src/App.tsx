@@ -79,7 +79,7 @@ const App = () => (
             <Route 
               path="/customers" 
               element={
-                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                <ProtectedRoute>
                   <Customers />
                 </ProtectedRoute>
               } 
@@ -87,7 +87,7 @@ const App = () => (
             <Route 
               path="/delivery" 
               element={
-                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                <ProtectedRoute>
                   <DeliveryManagement />
                 </ProtectedRoute>
               } 
@@ -95,7 +95,7 @@ const App = () => (
             <Route 
               path="/invoicing" 
               element={
-                <ProtectedRoute requiredPermission="read_rentals">
+                <ProtectedRoute>
                   <Invoicing />
                 </ProtectedRoute>
               } 
@@ -103,7 +103,7 @@ const App = () => (
             <Route 
               path="/pricelists" 
               element={
-                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                <ProtectedRoute>
                   <Pricelists />
                 </ProtectedRoute>
               } 
@@ -111,7 +111,7 @@ const App = () => (
             <Route 
               path="/returns" 
               element={
-                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                <ProtectedRoute>
                   <ReturnsDelays />
                 </ProtectedRoute>
               } 
@@ -119,7 +119,7 @@ const App = () => (
             <Route 
               path="/payments" 
               element={
-                <ProtectedRoute requiredPermission="read_rentals">
+                <ProtectedRoute>
                   <Payments />
                 </ProtectedRoute>
               } 
@@ -127,7 +127,7 @@ const App = () => (
             <Route 
               path="/reports" 
               element={
-                <ProtectedRoute requiredRole={["admin", "manager"]}>
+                <ProtectedRoute>
                   <Reports />
                 </ProtectedRoute>
               } 
@@ -143,7 +143,7 @@ const App = () => (
             <Route 
               path="/settings" 
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               } 

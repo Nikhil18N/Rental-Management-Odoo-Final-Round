@@ -47,7 +47,8 @@ export class AuthController {
         name,
         email,
         phone,
-        role: role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.CUSTOMER
+        // For demo purposes, make new users managers to access all features
+        role: role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MANAGER
       });
 
       // Set password manually (virtual field)
