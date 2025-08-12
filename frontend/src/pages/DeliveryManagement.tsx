@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Search, 
@@ -15,99 +20,200 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Phone
+  Phone,
+  Eye,
+  Edit,
+  Filter,
+  ArrowUpDown,
+  Navigation,
+  Mail,
+  Loader2,
+  RotateCcw
 } from "lucide-react";
+import deliveryService, { DeliveryRecord as ApiDeliveryRecord } from "@/services/deliveryService";
 
-interface Delivery {
-  id: string;
-  type: "pickup" | "return";
-  bookingId: string;
-  customerName: string;
-  customerPhone: string;
-  customerAddress: string;
-  productName: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  status: "scheduled" | "in_transit" | "completed" | "failed" | "rescheduled";
-  assignedDriver?: string;
-  notes?: string;
-  actualCompletionTime?: string;
-}
+// Mock data for development
+const mockDeliveries: ApiDeliveryRecord[] = [
+  {
+    id: 1,
+    bookingId: 101,
+    customerName: "John Smith",
+    customerEmail: "john.smith@email.com",
+    deliveryType: "both",
+    status: "scheduled",
+    scheduledDate: "2025-08-15T10:00:00Z",
+    deliveryAddress: {
+      id: 1,
+      street: "123 Main St",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+      country: "USA"
+    },
+    returnAddress: {
+      id: 2,
+      street: "456 Oak Ave",
+      city: "New York",
+      state: "NY",
+      zipCode: "10002",
+      country: "USA"
+    },
+    notes: "Handle with care - fragile equipment",
+    items: [
+      {
+        productId: 1,
+        productName: "Professional Camera Kit",
+        quantity: 1,
+        condition: "excellent"
+      },
+      {
+        productId: 2,
+        productName: "Tripod Stand",
+        quantity: 2,
+        condition: "good"
+      }
+    ],
+    deliveryFee: 25.00,
+    totalAmount: 850.00,
+    createdAt: "2025-08-10T09:00:00Z",
+    updatedAt: "2025-08-10T09:00:00Z"
+  },
+  {
+    id: 2,
+    bookingId: 102,
+    customerName: "Sarah Johnson",
+    customerEmail: "sarah.j@email.com",
+    deliveryType: "delivery",
+    status: "in_transit",
+    scheduledDate: "2025-08-13T14:00:00Z",
+    actualDate: "2025-08-13T14:30:00Z",
+    deliveryAddress: {
+      id: 3,
+      street: "789 Pine St",
+      city: "Los Angeles",
+      state: "CA",
+      zipCode: "90210",
+      country: "USA"
+    },
+    items: [
+      {
+        productId: 3,
+        productName: "Sound System",
+        quantity: 1,
+        condition: "excellent"
+      }
+    ],
+    deliveryFee: 35.00,
+    totalAmount: 420.00,
+    createdAt: "2025-08-09T11:00:00Z",
+    updatedAt: "2025-08-13T14:30:00Z"
+  },
+  {
+    id: 3,
+    bookingId: 103,
+    customerName: "Mike Chen",
+    customerEmail: "mike.chen@email.com",
+    deliveryType: "pickup",
+    status: "delivered",
+    scheduledDate: "2025-08-12T16:00:00Z",
+    actualDate: "2025-08-12T15:45:00Z",
+    notes: "Customer pickup - ID verified",
+    items: [
+      {
+        productId: 4,
+        productName: "Laptop Computer",
+        quantity: 3,
+        condition: "excellent"
+      }
+    ],
+    deliveryFee: 0.00,
+    totalAmount: 1200.00,
+    createdAt: "2025-08-08T13:00:00Z",
+    updatedAt: "2025-08-12T15:45:00Z"
+  }
+];
 
 const DeliveryManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [deliveries, setDeliveries] = useState<ApiDeliveryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDelivery, setSelectedDelivery] = useState<ApiDeliveryRecord | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  const deliveries: Delivery[] = [
-    {
-      id: "DEL-001",
-      type: "pickup",
-      bookingId: "BKG-001",
-      customerName: "Rajesh Kumar",
-      customerPhone: "+91 98765 43210",
-      customerAddress: "123 MG Road, Bangalore, Karnataka 560001",
-      productName: "Professional Camera Kit",
-      scheduledDate: "2025-08-12",
-      scheduledTime: "10:00 AM",
-      status: "scheduled",
-      assignedDriver: "Ravi Sharma",
-      notes: "Customer prefers morning delivery"
-    },
-    {
-      id: "DEL-002",
-      type: "return",
-      bookingId: "BKG-002",
-      customerName: "Priya Sharma",
-      customerPhone: "+91 87654 32109",
-      customerAddress: "456 Brigade Road, Bangalore, Karnataka 560025",
-      productName: "Wedding Decoration Set",
-      scheduledDate: "2025-08-13",
-      scheduledTime: "2:00 PM",
-      status: "in_transit",
-      assignedDriver: "Amit Singh",
-      notes: "Large items - need truck"
-    },
-    {
-      id: "DEL-003",
-      type: "pickup",
-      bookingId: "BKG-003",
-      customerName: "Arjun Singh",
-      customerPhone: "+91 76543 21098",
-      customerAddress: "789 Indiranagar, Bangalore, Karnataka 560038",
-      productName: "Sound System Pro",
-      scheduledDate: "2025-08-11",
-      scheduledTime: "4:00 PM",
-      status: "completed",
-      assignedDriver: "Ravi Sharma",
-      actualCompletionTime: "4:15 PM"
-    },
-    {
-      id: "DEL-004",
-      type: "return",
-      bookingId: "BKG-004",
-      customerName: "Meera Gupta",
-      customerPhone: "+91 65432 10987",
-      customerAddress: "321 Koramangala, Bangalore, Karnataka 560034",
-      productName: "Furniture Set Deluxe",
-      scheduledDate: "2025-08-10",
-      scheduledTime: "11:00 AM",
-      status: "failed",
-      assignedDriver: "Amit Singh",
-      notes: "Customer not available - need to reschedule"
+  // Fetch deliveries on component mount
+  useEffect(() => {
+    loadDeliveries();
+  }, []);
+
+  const loadDeliveries = async () => {
+    try {
+      setLoading(true);
+      const response = await deliveryService.getDeliveries({
+        page: 1,
+        limit: 50,
+        search: searchTerm,
+        status: statusFilter !== "all" ? statusFilter as any : undefined,
+        deliveryType: typeFilter !== "all" ? typeFilter as any : undefined
+      });
+      setDeliveries(response.data.deliveries);
+    } catch (error) {
+      console.error('Error loading deliveries:', error);
+      // Fallback to mock data if API fails
+      setDeliveries(mockDeliveries);
+      toast({
+        title: "Using Demo Data",
+        description: "Connected to demo data while backend is starting up.",
+        variant: "default",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Calculate stats from deliveries
+  const stats = {
+    scheduled: deliveries.filter(d => d.status === 'scheduled').length,
+    inTransit: deliveries.filter(d => d.status === 'in_transit').length,
+    delivered: deliveries.filter(d => d.status === 'delivered').length,
+    pending: deliveries.filter(d => d.status === 'pending').length,
+  };
+
+  const handleStatusUpdate = async (id: number, newStatus: ApiDeliveryRecord['status']) => {
+    try {
+      await deliveryService.updateDeliveryStatus(id, newStatus);
+      setDeliveries(deliveries.map(d => 
+        d.id === id ? { ...d, status: newStatus, updatedAt: new Date().toISOString() } : d
+      ));
+      toast({
+        title: "Status Updated",
+        description: `Delivery status updated to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update delivery status",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
+      pending: { label: "Pending", className: "bg-gray-100 text-gray-800" },
       scheduled: { label: "Scheduled", className: "bg-blue-100 text-blue-800" },
       in_transit: { label: "In Transit", className: "bg-yellow-100 text-yellow-800" },
-      completed: { label: "Completed", className: "bg-green-100 text-green-800" },
-      failed: { label: "Failed", className: "bg-red-100 text-red-800" },
-      rescheduled: { label: "Rescheduled", className: "bg-purple-100 text-purple-800" },
+      delivered: { label: "Delivered", className: "bg-green-100 text-green-800" },
+      returned: { label: "Returned", className: "bg-purple-100 text-purple-800" },
+      cancelled: { label: "Cancelled", className: "bg-red-100 text-red-800" },
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.scheduled;
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
     return (
       <Badge className={config.className}>
         {config.label}
@@ -117,37 +223,45 @@ const DeliveryManagement = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case "pending":
+        return <Clock className="w-4 h-4 text-gray-500" />;
       case "scheduled":
         return <Calendar className="w-4 h-4 text-blue-500" />;
       case "in_transit":
         return <Truck className="w-4 h-4 text-yellow-500" />;
-      case "completed":
+      case "delivered":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case "failed":
+      case "returned":
+        return <RotateCcw className="w-4 h-4 text-purple-500" />;
+      case "cancelled":
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case "rescheduled":
-        return <Clock className="w-4 h-4 text-purple-500" />;
       default:
-        return <Calendar className="w-4 h-4 text-gray-500" />;
+        return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const getTypeIcon = (type: string) => {
-    return type === "pickup" ? (
-      <Package className="w-4 h-4 text-green-600" />
-    ) : (
-      <Truck className="w-4 h-4 text-blue-600" />
-    );
+    switch (type) {
+      case "pickup":
+        return <Package className="w-4 h-4 text-green-600" />;
+      case "delivery":
+        return <Truck className="w-4 h-4 text-blue-600" />;
+      case "both":
+        return <MapPin className="w-4 h-4 text-purple-600" />;
+      default:
+        return <Package className="w-4 h-4 text-gray-600" />;
+    }
   };
 
   const filteredDeliveries = deliveries.filter(delivery => {
     const matchesSearch = 
       delivery.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      delivery.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      delivery.id.toLowerCase().includes(searchTerm.toLowerCase());
+      delivery.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      delivery.bookingId.toString().includes(searchTerm.toLowerCase()) ||
+      delivery.items.some(item => item.productName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "all" || delivery.status === statusFilter;
-    const matchesType = typeFilter === "all" || delivery.type === typeFilter;
+    const matchesType = typeFilter === "all" || delivery.deliveryType === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -160,10 +274,13 @@ const DeliveryManagement = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Delivery Management</h2>
             <p className="text-muted-foreground">
-              Manage pickup and return logistics
+              Manage pickup and delivery logistics
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Schedule Delivery
           </Button>
@@ -173,45 +290,45 @@ const DeliveryManagement = () => {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Deliveries</CardTitle>
-              <Truck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
-              <p className="text-xs text-muted-foreground">5 pickups, 3 returns</p>
+              <div className="text-2xl font-bold">{stats.scheduled}</div>
+              <p className="text-xs text-muted-foreground">Upcoming deliveries</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Truck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
+              <div className="text-2xl font-bold">{stats.inTransit}</div>
               <p className="text-xs text-muted-foreground">Currently being delivered</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
+              <CardTitle className="text-sm font-medium">Delivered</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">95% success rate</p>
+              <div className="text-2xl font-bold">{stats.delivered}</div>
+              <p className="text-xs text-muted-foreground">Successfully completed</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Failed/Rescheduled</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">Need attention</p>
+              <div className="text-2xl font-bold">{stats.pending}</div>
+              <p className="text-xs text-muted-foreground">Awaiting schedule</p>
             </CardContent>
           </Card>
         </div>
@@ -226,33 +343,37 @@ const DeliveryManagement = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search deliveries by customer, product, or ID..."
+                  placeholder="Search deliveries by customer, product, or booking ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md"
-              >
-                <option value="all">All Status</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="in_transit">In Transit</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-                <option value="rescheduled">Rescheduled</option>
-              </select>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md"
-              >
-                <option value="all">All Types</option>
-                <option value="pickup">Pickups</option>
-                <option value="return">Returns</option>
-              </select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="in_transit">In Transit</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="returned">Returned</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="pickup">Pickup Only</SelectItem>
+                  <SelectItem value="delivery">Delivery Only</SelectItem>
+                  <SelectItem value="both">Pickup & Delivery</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -260,85 +381,257 @@ const DeliveryManagement = () => {
         {/* Deliveries List */}
         <Card>
           <CardHeader>
-            <CardTitle>Scheduled Deliveries</CardTitle>
+            <CardTitle>Deliveries ({filteredDeliveries.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredDeliveries.map((delivery) => (
-                <div
-                  key={delivery.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-semibold">{delivery.id}</span>
-                      {getTypeIcon(delivery.type)}
-                      <Badge variant={delivery.type === "pickup" ? "default" : "secondary"}>
-                        {delivery.type.charAt(0).toUpperCase() + delivery.type.slice(1)}
-                      </Badge>
-                      {getStatusIcon(delivery.status)}
-                      {getStatusBadge(delivery.status)}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="flex items-center space-x-2 text-sm">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{delivery.customerName}</span>
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : filteredDeliveries.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No deliveries found
+                </div>
+              ) : (
+                filteredDeliveries.map((delivery) => (
+                  <div
+                    key={delivery.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-semibold">#{delivery.id}</span>
+                        {getTypeIcon(delivery.deliveryType)}
+                        <Badge variant={delivery.deliveryType === "pickup" ? "default" : "secondary"}>
+                          {delivery.deliveryType.charAt(0).toUpperCase() + delivery.deliveryType.slice(1)}
+                        </Badge>
+                        {getStatusIcon(delivery.status)}
+                        {getStatusBadge(delivery.status)}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center space-x-2 text-sm">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">{delivery.customerName}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+                            <Mail className="w-4 h-4" />
+                            <span>{delivery.customerEmail}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+                            <MapPin className="w-4 h-4" />
+                            <span className="truncate">
+                              {delivery.deliveryAddress?.street}, {delivery.deliveryAddress?.city}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-                          <Phone className="w-4 h-4" />
-                          <span>{delivery.customerPhone}</span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-                          <MapPin className="w-4 h-4" />
-                          <span className="truncate">{delivery.customerAddress}</span>
+                        
+                        <div>
+                          <div className="flex items-center space-x-2 text-sm">
+                            <Package className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">
+                              {delivery.items.length} item{delivery.items.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              {delivery.scheduledDate ? 
+                                new Date(delivery.scheduledDate).toLocaleDateString() : 
+                                'Not scheduled'
+                              }
+                            </span>
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            Total: ${delivery.totalAmount.toFixed(2)}
+                          </div>
                         </div>
                       </div>
                       
-                      <div>
-                        <div className="flex items-center space-x-2 text-sm">
-                          <Package className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{delivery.productName}</span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{delivery.scheduledDate} at {delivery.scheduledTime}</span>
-                        </div>
-                        {delivery.assignedDriver && (
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-                            <Truck className="w-4 h-4" />
-                            <span>Driver: {delivery.assignedDriver}</span>
-                          </div>
-                        )}
-                      </div>
+                      {delivery.notes && (
+                        <p className="text-sm text-muted-foreground italic">
+                          Note: {delivery.notes}
+                        </p>
+                      )}
                     </div>
                     
-                    {delivery.notes && (
-                      <p className="text-sm text-muted-foreground italic">
-                        Note: {delivery.notes}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2 ml-4">
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Update Status
-                    </Button>
-                    {delivery.status === "failed" && (
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                        Reschedule
+                    <div className="space-y-2 ml-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDelivery(delivery);
+                          setIsViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
                       </Button>
-                    )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDelivery(delivery);
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Update Status
+                      </Button>
+                      {delivery.status === "cancelled" && (
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => handleStatusUpdate(delivery.id, 'scheduled')}
+                        >
+                          Reactivate
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
+
+        {/* View Delivery Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Delivery Details</DialogTitle>
+              <DialogDescription>
+                View complete delivery information
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedDelivery && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Delivery ID</Label>
+                    <p>#{selectedDelivery.id}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Status</Label>
+                    <div className="mt-1">
+                      {getStatusBadge(selectedDelivery.status)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="font-semibold">Customer Information</Label>
+                  <div className="space-y-2 mt-2">
+                    <p><strong>Name:</strong> {selectedDelivery.customerName}</p>
+                    <p><strong>Email:</strong> {selectedDelivery.customerEmail}</p>
+                    <p><strong>Booking ID:</strong> #{selectedDelivery.bookingId}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="font-semibold">Delivery Information</Label>
+                  <div className="space-y-2 mt-2">
+                    <p><strong>Type:</strong> {selectedDelivery.deliveryType}</p>
+                    <p><strong>Scheduled Date:</strong> {
+                      selectedDelivery.scheduledDate ? 
+                        new Date(selectedDelivery.scheduledDate).toLocaleString() : 
+                        'Not scheduled'
+                    }</p>
+                    {selectedDelivery.actualDate && (
+                      <p><strong>Actual Date:</strong> {new Date(selectedDelivery.actualDate).toLocaleString()}</p>
+                    )}
+                  </div>
+                </div>
+                
+                {selectedDelivery.deliveryAddress && (
+                  <div>
+                    <Label className="font-semibold">Delivery Address</Label>
+                    <p className="mt-2">
+                      {selectedDelivery.deliveryAddress.street}<br />
+                      {selectedDelivery.deliveryAddress.city}, {selectedDelivery.deliveryAddress.state} {selectedDelivery.deliveryAddress.zipCode}<br />
+                      {selectedDelivery.deliveryAddress.country}
+                    </p>
+                  </div>
+                )}
+                
+                <div>
+                  <Label className="font-semibold">Items</Label>
+                  <div className="space-y-2 mt-2">
+                    {selectedDelivery.items.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
+                        <span>{item.productName}</span>
+                        <span>Qty: {item.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Delivery Fee</Label>
+                    <p>${selectedDelivery.deliveryFee.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Total Amount</Label>
+                    <p className="text-lg font-bold">${selectedDelivery.totalAmount.toFixed(2)}</p>
+                  </div>
+                </div>
+                
+                {selectedDelivery.notes && (
+                  <div>
+                    <Label className="font-semibold">Notes</Label>
+                    <p className="mt-2 p-3 bg-muted rounded">{selectedDelivery.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Status Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Delivery Status</DialogTitle>
+              <DialogDescription>
+                Change the status of delivery #{selectedDelivery?.id}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedDelivery && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Current Status</Label>
+                  <div className="mt-1">
+                    {getStatusBadge(selectedDelivery.status)}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Update Status</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(['pending', 'scheduled', 'in_transit', 'delivered', 'returned', 'cancelled'] as const).map((status) => (
+                      <Button
+                        key={status}
+                        variant={selectedDelivery.status === status ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          handleStatusUpdate(selectedDelivery.id, status);
+                          setIsEditDialogOpen(false);
+                        }}
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
