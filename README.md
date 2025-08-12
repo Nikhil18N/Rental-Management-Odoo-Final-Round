@@ -1,3 +1,5 @@
+Video Link: https://drive.google.com/file/d/1Hj2GwMQCALL70pMIT0PPIPMgvZSdMibc/view?usp=drive_link
+
 # Rental Management System - Comprehensive Solution
 
 A full-featured rental management application built with modern web technologies for efficient property and booking management. This system streamlines the entire rental process from quotation to return, with integrated payment processing and automated workflows.
