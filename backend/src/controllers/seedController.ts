@@ -234,8 +234,9 @@ export class SeedController {
           bookingOrderId: booking.id,
           paidBy: booking.customerId,
           amount: booking.totalAmount,
-          paymentMethod: PaymentMethod.CREDIT_CARD,
-          paymentType: PaymentType.RENTAL_FEE,
+          currency: 'USD',
+          method: PaymentMethod.CREDIT_CARD,
+          type: PaymentType.RENTAL_FEE,
           status: PaymentStatusEnum.COMPLETED,
           paymentDate: new Date(),
           transactionId: `TXN-${Date.now()}-${i}`

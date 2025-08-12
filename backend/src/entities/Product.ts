@@ -14,21 +14,34 @@ import { Category } from './Category';
 import { ProductVariant } from './ProductVariant';
 import { BookingOrderItem } from './BookingOrderItem';
 import { QuotationItem } from './QuotationItem';
+import { User } from './User';
 import { RentalUnit, ProductCondition } from './enums';
 
 export { RentalUnit, ProductCondition };
+
+export enum ApprovalStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  NEEDS_REVIEW = 'needs_review'
+}
 
 @Entity('products')
 @Index(['categoryId'])
 @Index(['isRentable'])
 @Index(['isActive'])
 @Index(['sku'], { unique: true })
+@Index(['ownerId'])
+@Index(['approvalStatus'])
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column('int')
   categoryId: number;
+
+  @Column('int')
+  ownerId: number;
 
   @Column('varchar', { length: 200 })
   name: string;
@@ -149,7 +162,21 @@ export class Product {
   @Column('boolean', { default: false })
   isFeatured: boolean;
 
+  @Column({
+    type: 'enum',
+    enum: ApprovalStatus,
+    default: ApprovalStatus.PENDING
+  })
+  approvalStatus: ApprovalStatus;
+
+  @Column({ type: 'timestamp', nullable: true })
+  deletedAt?: Date;
+
   // Relationships
+  @ManyToOne(() => User, user => user.products)
+  @JoinColumn({ name: 'ownerId' })
+  owner: User;
+
   @ManyToOne(() => Category, category => category.products)
   @JoinColumn({ name: 'categoryId' })
   category: Category;

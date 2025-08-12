@@ -15,6 +15,7 @@ import { BookingOrder } from './BookingOrder';
 import { Quotation } from './Quotation';
 import { UserProfile } from './UserProfile';
 import { Payment } from './Payment';
+import { Product } from './Product';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -111,6 +112,9 @@ export class User {
 
   @OneToMany(() => Payment, payment => payment.paidBy)
   payments: Payment[];
+
+  @OneToMany(() => Product, product => product.owner)
+  products: Product[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -193,7 +193,7 @@ export class AuthController {
 
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = parseInt(req.user?.id || '0');
+      const userId = parseInt(String(req.user?.id || '0'));
       
       const user = await this.userRepository.findOne({
         where: { id: userId },
@@ -363,7 +363,7 @@ export class AuthController {
   }
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = parseInt(req.user?.id || '0');
+      const userId = parseInt(String(req.user?.id || '0'));
       const { name, phone } = req.body;
 
       const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -401,7 +401,7 @@ export class AuthController {
 
   async changePassword(req: Request, res: Response): Promise<void> {
     try {
-      const userId = parseInt(req.user?.id || '0');
+      const userId = parseInt(String(req.user?.id || '0'));
       const { currentPassword, newPassword } = req.body;
 
       const user = await this.userRepository.findOne({
@@ -466,7 +466,7 @@ export class AuthController {
 
   async deleteAccount(req: Request, res: Response): Promise<void> {
     try {
-      const userId = parseInt(req.user?.id || '0');
+      const userId = parseInt(String(req.user?.id || '0'));
       const { password } = req.body;
 
       const user = await this.userRepository.findOne({

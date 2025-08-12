@@ -162,6 +162,9 @@ export class BookingOrder {
   @Column({ type: 'text', nullable: true })
   cancellationReason?: string;
 
+  @Column({ type: 'text', nullable: true })
+  returnNotes?: string;
+
   // Notification Tracking
   @Column('boolean', { default: false })
   pickupReminderSent: boolean;

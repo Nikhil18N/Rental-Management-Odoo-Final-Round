@@ -69,19 +69,25 @@ export class Payment {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
+  @Column('varchar', { length: 3, default: 'USD' })
+  currency: string;
+
   @Column({
     type: 'enum',
     enum: PaymentMethod,
     default: PaymentMethod.CASH
   })
-  paymentMethod: PaymentMethod;
+  method: PaymentMethod;
 
   @Column({
     type: 'enum',
     enum: PaymentType,
     default: PaymentType.RENTAL_FEE
   })
-  paymentType: PaymentType;
+  type: PaymentType;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string;
 
   @Column({
     type: 'enum',
@@ -121,7 +127,7 @@ export class Payment {
 
   @ManyToOne(() => BookingOrder, { nullable: true })
   @JoinColumn({ name: 'bookingOrderId' })
-  bookingOrder?: BookingOrder;
+  booking?: BookingOrder;
 
   @ManyToOne(() => User, user => user.payments)
   @JoinColumn({ name: 'paidBy' })

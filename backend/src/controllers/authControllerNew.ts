@@ -174,7 +174,7 @@ export class AuthController {
 
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = parseInt(req.user?.id || '0');
+      const userId = parseInt(String(req.user?.id || '0'));
       
       const user = await this.userRepository.findOne({
         where: { id: userId },
